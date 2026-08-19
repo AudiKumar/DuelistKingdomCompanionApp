@@ -1,7 +1,3 @@
-/* Parallax Pixel Stars start screen — ported from the "Pure CSS Parallax Pixel Stars" pen
-   into React Native using only packages already imported in the project:
-   react-native, react-native-svg, @react-navigation/native. */
-
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { StyleSheet, Text, View, Dimensions, Animated, Easing, TouchableOpacity, Platform } from "react-native";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
@@ -144,7 +140,7 @@ export default function StartScreen() {
           <TouchableOpacity
             style={styles.startBtn}
             activeOpacity={0.8}
-            onPress={() => (navigation.navigate as any)("Duel")}
+            onPress={() => (navigation.navigate as any)("Welcome")}
           >
             <Animated.Text style={[styles.startBtnText, { opacity: cursorOpacity }]}>
               ▸

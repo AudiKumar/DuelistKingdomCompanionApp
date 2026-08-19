@@ -6,6 +6,9 @@ import { createStaticNavigation, StaticParamList } from '@react-navigation/nativ
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import StartScreen from './screens/StartScreen';
+import DuelScreen from './screens/DuelScreen';
+import WelcomeScreen from './screens/WelcomeScreen';
+
 
 export const RootStack = createNativeStackNavigator({
   screens: {
@@ -17,13 +20,23 @@ export const RootStack = createNativeStackNavigator({
         headerStyle: {
           backgroundColor: '#00000000', 
         }
-
-
       },
     },
 
-    /*Duel: {
+    Duel: {
       screen: DuelScreen,
+      options: {
+        title: "", 
+        headerShown: false,
+        headerTransparent: true, 
+        headerStyle: {
+          backgroundColor: '#00000000', 
+        }
+      },
+    },
+
+    Welcome: {
+      screen: WelcomeScreen,
       options: {
         title: "", 
         headerTransparent: true, 
