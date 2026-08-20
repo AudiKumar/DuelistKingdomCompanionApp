@@ -11,6 +11,8 @@ type StarLayerProps = {
   opacity?: number;
 };
 
+//todo: add kaibucks 
+
 function StarLayer({ count, size, duration, opacity = 1 }: StarLayerProps) {
   const translateY = useRef(new Animated.Value(0)).current;
 

@@ -10,6 +10,15 @@ import DuelScreen from './screens/DuelScreen';
 import WelcomeScreen from './screens/WelcomeScreen';
 
 
+//TODO
+/* 
+Dice rolling 
+Kaibucks add it 
+Some manner of adding credits via either debug menu or nfc tags (stretch goal)
+Rule button on duel screen 
+*/
+
+
 export const RootStack = createNativeStackNavigator({
   screens: {
     Start: {

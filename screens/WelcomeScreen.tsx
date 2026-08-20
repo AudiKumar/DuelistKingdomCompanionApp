@@ -40,7 +40,7 @@ export default function WelcomeScreen() {
     setWagerModalVisible(false);
   }
 
-  function confirmWager() {
+  function confirmWager() { // TODO: maybe wagering your best card // this would be a last condition. 
     const amount = Number(wagerInput);
 
     if (!wagerInput.trim() || Number.isNaN(amount)) {
