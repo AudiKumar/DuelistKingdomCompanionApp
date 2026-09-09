@@ -1,5 +1,5 @@
 //TODO: welcome modal that asks the user for their given information. Name and User Name Mostly, maybe a profile picture for the fun of it
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,14 +13,27 @@ import {
   Pressable,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-//TODO: add a ? mark screen  that will explain the extra rules of the game
-// KAIBABUCKS
+
+const USER_NAME_KEY = "@duelist_kingdom_user_name";
 
 export default function WelcomeScreen() {
+
+  const [playerName, setPlayerName] = useState<string | null>(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const storedName = await AsyncStorage.getItem(USER_NAME_KEY);
+        setPlayerName(storedName);
+      } catch (error) {
+        console.error("Failed to read user name from AsyncStorage", error);
+      }
+    })();
+  }, []);
    const navigation = useNavigation();
   // TODO: wire these up to real player data
-  const [playerName] = useState('PLAYER NAME (INSERT REAL DATA HERE)');
+  
   const [wallet, setWallet] = useState(10);
 
   const [wagerModalVisible, setWagerModalVisible] = useState(false);
@@ -70,7 +83,7 @@ export default function WelcomeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.statText} numberOfLines={1}>
-        {playerName}
+        Welcome {playerName}
       </Text>
 
       {/* Wallet & Wager Display */}
