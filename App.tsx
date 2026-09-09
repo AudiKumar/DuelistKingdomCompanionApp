@@ -8,6 +8,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import StartScreen from './screens/StartScreen';
 import DuelScreen from './screens/DuelScreen';
 import WelcomeScreen from './screens/WelcomeScreen';
+import UpdateBalanceScreen from './screens/UpdateBalanceScreen'
 
 
 //TODO
@@ -54,9 +55,16 @@ export const RootStack = createNativeStackNavigator({
         }
       },
     },
-    /*Options: {
-      screen: OptionsScreen,
-    }*/
+    UpdateBalance: {
+      screen: UpdateBalanceScreen,
+        options: {
+        title: "", 
+        headerTransparent: true, 
+        headerStyle: {
+          backgroundColor: '#00000000', 
+        }
+      },
+    }
 
   }
 });
