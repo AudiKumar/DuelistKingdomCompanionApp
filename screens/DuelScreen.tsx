@@ -1,5 +1,5 @@
 //TODO: pull wagered chips, wallet, and starting lifepoints from real game/navigation state
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -21,16 +21,21 @@ export default function DuelScreen() {
 
   // TODO: wire these up to real data (likely passed in via navigation params
   // from the WelcomeScreen wager flow)
-  const [wageredChips] = useState(0);
-  const [wallet] = useState(10);
-  const [lifePoints, setLifePoints] = useState(4000); //TODO: Pipe in real data
-
+  const [wageredChips] = useState(0); //TODO: Pipe in real data
+  const [wallet] = useState(10); //TODO: Pipe in real data
+  const [lifePoints, setLifePoints] = useState(4000); 
+  const [duelEnded, setDuelEnded] = useState(false); // this is for when the duel has ended by the user's life points have been depleted
   const [lifePointsModalVisible, setLifePointsModalVisible] = useState(false);
   const [lifePointsAction, setLifePointsAction] = useState<LifePointAction>(null);
   const [lifePointsInput, setLifePointsInput] = useState('');
 
   const [coinFlipModalVisible, setCoinFlipModalVisible] = useState(false);
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
+
+  function handleEndDuel() {
+    showAlert('You lost the duel!');
+    (navigation.navigate as any)('Welcome');
+  }
 
   function showAlert(message: string) {
     if (Platform.OS === 'web') {
@@ -71,6 +76,14 @@ export default function DuelScreen() {
     showAlert('You forfeited the duel.');
     (navigation.navigate as any)('Welcome');
   }
+
+  //checks to see if the game ended through depletion of lifepoints
+  useEffect(() => {
+    if (lifePoints <= 0 && !duelEnded) {
+      setDuelEnded(true);
+      handleEndDuel();
+    }
+  }, [lifePoints, duelEnded]);
 
   return (
     <View style={styles.container}>

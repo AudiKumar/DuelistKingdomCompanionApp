@@ -1,5 +1,5 @@
 //TODO: welcome modal that asks the user for their given information. Name and User Name Mostly, maybe a profile picture for the fun of it
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,15 +13,34 @@ import {
   Pressable,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-//TODO: add a ? mark screen  that will explain the extra rules of the game
-// KAIBABUCKS
+const USER_NAME_KEY = "@duelist_kingdom_user_name";
+const USER_STAR_BALANCE = "@dk_star_wallet";
+const USER_KAIBUCKS_BALANCE = "@dk_kaibucks"
 
 export default function WelcomeScreen() {
+  const [playerName, setPlayerName] = useState<string | null>(null);
+  const [starWalletBalance, setStarWalletBalance] = useState<number>(0);
+  const [kaibaBucks, setKaibaBucksBalance] = useState<number>(0);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const storedName = await AsyncStorage.getItem(USER_NAME_KEY);
+        const stars = await AsyncStorage.getItem(USER_STAR_BALANCE);
+        const money = await AsyncStorage.getItem(USER_KAIBUCKS_BALANCE)
+        setPlayerName(storedName);
+        const parsedWallet = stars != null ? Number(stars) : NaN;
+        const parsedKaibucks = money != null ? Number(money): NaN; 
+        setStarWalletBalance(Number.isFinite(parsedWallet) ? parsedWallet : 10);
+        setKaibaBucksBalance(Number.isFinite(parsedKaibucks) ? parsedKaibucks : 500);      
+      } catch (error) {
+        console.error("Failed to read user name from AsyncStorage", error);
+      }
+    })();
+  }, [])
    const navigation = useNavigation();
-  // TODO: wire these up to real player data
-  const [playerName] = useState('PLAYER NAME (INSERT REAL DATA HERE)');
-  const [wallet, setWallet] = useState(10);
 
   const [wagerModalVisible, setWagerModalVisible] = useState(false);
   const [wagerInput, setWagerInput] = useState('');
@@ -42,8 +61,7 @@ export default function WelcomeScreen() {
   function closeWagerModal() {
     setWagerModalVisible(false);
   }
-
-  function confirmWager() { // TODO: maybe wagering your best card // this would be a last condition. 
+  async function confirmWager() { // TODO: maybe wagering your best card // this would be a last condition. 
     const amount = Number(wagerInput);
 
     if (!wagerInput.trim() || Number.isNaN(amount)) {
@@ -54,30 +72,43 @@ export default function WelcomeScreen() {
       showAlert('Your wager has to be at least 1 star.');
       return;
     }
-    if (amount > wallet) {
+    if (amount > starWalletBalance) { // CHANGED: was `wallet` (undefined)
       showAlert("You don't have enough stars for that wager.");
       return;
     }
 
+    const newBalance = starWalletBalance - amount; // CHANGED: was `prev - amount` on a string
+
     // TODO: actually kick off the duel with this wager amount
-    setWallet((prev) => prev - amount);
+    setStarWalletBalance(newBalance);
+    try {
+      await AsyncStorage.setItem(USER_STAR_BALANCE, String(newBalance));
+    } catch (error) {
+      console.error("Failed to save wallet balance to AsyncStorage", error);
+    }
+
     setWagerModalVisible(false);
     showAlert(`Wagered ${amount} stars. Good luck!`);
 
     (navigation.navigate as any)("Duel"); 
   }
 
+  function goToUpdateBalance() {
+    (navigation.navigate as any)("UpdateBalance");
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.statText} numberOfLines={1}>
-        {playerName}
+        Welcome {playerName}
       </Text>
 
       {/* Wallet & Wager Display */}
       <View style={styles.statsContainer}>
         <Text style={styles.statText}>
-          Wallet: <Text style={styles.highlight}>{wallet}</Text> Stars
+          Stars: <Text style={styles.highlight}>{starWalletBalance}</Text>
         </Text>
+        <Text style = {styles.statText}> Wallet Balance: {kaibaBucks} Kaibucks</Text>
       </View>
 
       {/* Action Buttons */}
@@ -88,6 +119,16 @@ export default function WelcomeScreen() {
           onPress={openWagerModal}
         >
           <Text style={styles.wagerBtnText}>WAGER</Text>
+        </TouchableOpacity>
+      </View>
+
+        <View style={styles.buttonRow}>
+        <TouchableOpacity
+          style={styles.wagerBtn}
+          activeOpacity={0.8}
+          onPress={goToUpdateBalance}
+        >
+          <Text style={styles.wagerBtnText}>UPDATE BALANCE</Text>
         </TouchableOpacity>
       </View>
 
@@ -106,7 +147,7 @@ export default function WelcomeScreen() {
             <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
               <Text style={styles.modalTitle}>PLACE YOUR WAGER</Text>
               <Text style={styles.modalSubtitle}>
-                Wallet: <Text style={styles.highlight}>{wallet}</Text> Stars
+                Star Balance: <Text style={styles.highlight}>{starWalletBalance}</Text> Stars
               </Text>
 
               <TextInput // TODO: this could probably be changed to a plus and minus button 
@@ -174,6 +215,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#9A416F',
     paddingVertical: 12,
     paddingHorizontal: 24,
+    marginBottom: 24,
     borderWidth: 1.5,
     borderColor: 'rgb(255, 230, 0)',
   },

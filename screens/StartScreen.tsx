@@ -8,16 +8,18 @@ import {
   Easing,
   TouchableOpacity,
   Platform,
-  Modal,        // ADDED: for the name-entry modal (https://reactnative.dev/docs/modal)
-  TextInput,    // ADDED: for capturing the user's name
-  KeyboardAvoidingView, // ADDED: keeps the input visible above the keyboard on iOS
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
 } from "react-native";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // ADDED: cross-platform key-value storage (web/iOS/Android)
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 const USER_NAME_KEY = "@duelist_kingdom_user_name";
+const USER_STAR_BALANCE = "@dk_star_wallet";
+const USER_KAIBUCKS_BALANCE = "@dk_kaibucks"
 
 type StarLayerProps = {
   count: number;
@@ -26,7 +28,6 @@ type StarLayerProps = {
   opacity?: number;
 };
 
-//todo: add kaibucks
 function StarLayer({ count, size, duration, opacity = 1 }: StarLayerProps) {
   const translateY = useRef(new Animated.Value(0)).current;
 
@@ -99,10 +100,9 @@ export default function StartScreen() {
   const cursorOpacity = useRef(new Animated.Value(1)).current;
 
   // states for user modal
-  const [isCheckingUser, setIsCheckingUser] = useState(true);       
-  const [showNameModal, setShowNameModal] = useState(false);        
-  const [nameInput, setNameInput] = useState("");                  
-
+  const [isCheckingUser, setIsCheckingUser] = useState(true);
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [nameInput, setNameInput] = useState("");
 
   useEffect(() => {
     Animated.loop(
@@ -123,28 +123,30 @@ export default function StartScreen() {
     ).start();
   }, [cursorOpacity]);
 
-  // ===== ADDED: check AsyncStorage on mount for an existing name entry =====
-  // Runs once (empty dependency array) per React's useEffect docs:
-  // https://react.dev/reference/react/useEffect
   useEffect(() => {
     let isMounted = true;
 
     (async () => {
       try {
-        const storedName = await AsyncStorage.getItem(USER_NAME_KEY); // ADDED
+        const storedName = await AsyncStorage.getItem(USER_NAME_KEY);
         if (!isMounted) return;
 
         if (storedName === null) {
-          // ADDED: no entry found -> this is a first-time user, show the modal
           setShowNameModal(true);
+          try {
+            await AsyncStorage.multiSet([
+              [USER_STAR_BALANCE, "10"],
+              [USER_KAIBUCKS_BALANCE, "500"],
+            ]);
+          } catch (walletError) {
+            console.error("Failed to initialize wallet balance", walletError);
+          }
         }
       } catch (error) {
-        // ADDED: AsyncStorage reads can reject; decide your own fallback here.
-        // Currently we still prompt for a name on read failure.
         console.error("Failed to read user name from AsyncStorage", error);
         setShowNameModal(true);
       } finally {
-        if (isMounted) setIsCheckingUser(false); // ADDED
+        if (isMounted) setIsCheckingUser(false);
       }
     })();
 
@@ -152,24 +154,31 @@ export default function StartScreen() {
       isMounted = false;
     };
   }, []);
-  // ===== END ADDED EFFECT =====
 
-  // ADDED: saves the entered name and closes the modal
   const handleSaveName = useCallback(async () => {
     const trimmed = nameInput.trim();
     if (!trimmed) return;
 
     try {
-      await AsyncStorage.setItem(USER_NAME_KEY, trimmed); // ADDED
-      setShowNameModal(false);                            // ADDED
+      await AsyncStorage.setItem(USER_NAME_KEY, trimmed);
+      setShowNameModal(false);
     } catch (error) {
       console.error("Failed to save user name to AsyncStorage", error);
     }
   }, [nameInput]);
 
+  const handleResetStorage = useCallback(async () => {
+    try {
+      await AsyncStorage.multiRemove([USER_NAME_KEY, USER_STAR_BALANCE, USER_KAIBUCKS_BALANCE]);
+      setNameInput("");
+      setShowNameModal(true);
+    } catch (error) {
+      console.error("Failed to clear user storage", error);
+    }
+  }, []);
+
   return (
     <View style={styles.container}>
-      {/* UNCHANGED: background gradient */}
       <Svg height={height} width={width} style={StyleSheet.absoluteFillObject}>
         <Defs>
           <RadialGradient id="bg" cx="50%" cy="100%" rx="90%" ry="70%" gradientUnits="userSpaceOnUse" fx="50%" fy="100%">
@@ -185,7 +194,6 @@ export default function StartScreen() {
       <StarLayer count={70} size={2} duration={100000} opacity={0.85} />
       <StarLayer count={35} size={3} duration={150000} />
 
-      {/* UNCHANGED: title + start button */}
       <View style={styles.content}>
         <View style={styles.titleWrapper}>
           <Text style={styles.title} numberOfLines={1}>
@@ -205,28 +213,33 @@ export default function StartScreen() {
             </Animated.Text>
             <Text style={styles.startBtnText}> START</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.resetBtn}
+            activeOpacity={0.8}
+            onPress={handleResetStorage}
+          >
+            <Text style={styles.resetBtnText}>RESET DATA</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Modal that prompts the user for the */}
       <Modal
-        visible={!isCheckingUser && showNameModal} // ADDED
+        visible={!isCheckingUser && showNameModal}
         animationType="fade"
         transparent
-        onRequestClose={() => {
-          // this will prevent dismissal without entering a name
-        }}
+        onRequestClose={() => {}}
       >
         <KeyboardAvoidingView
-          style={styles.modalOverlay} // ADDED style, see below
+          style={styles.modalOverlay}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <View style={styles.modalCard}> {/* ADDED style */}
-            <Text style={styles.modalTitle}>Welcome, Duelist</Text> {/* ADDED style */}
-            <Text style={styles.modalSubtitle}>What should we call you?</Text> {/* ADDED style */}
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Welcome, Duelist</Text>
+            <Text style={styles.modalSubtitle}>What should we call you?</Text>
 
             <TextInput
-              style={styles.modalInput} // ADDED style
+              style={styles.modalInput}
               value={nameInput}
               onChangeText={setNameInput}
               placeholder="Enter your name"
@@ -238,12 +251,12 @@ export default function StartScreen() {
             />
 
             <TouchableOpacity
-              style={[styles.modalButton, !nameInput.trim() && styles.modalButtonDisabled]} // ADDED style
+              style={[styles.modalButton, !nameInput.trim() && styles.modalButtonDisabled]}
               activeOpacity={0.8}
               onPress={handleSaveName}
               disabled={!nameInput.trim()}
             >
-              <Text style={styles.modalButtonText}>CONTINUE</Text> {/* ADDED style */}
+              <Text style={styles.modalButtonText}>CONTINUE</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -313,9 +326,22 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
     fontFamily: "altFont",
   },
-  // ----- END UNCHANGED -----
-
-  // ===== ADDED: styles for the name-entry modal =====
+  resetBtn: {
+    marginTop: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: "#ff4d4d",
+    backgroundColor: "rgba(255, 77, 77, 0.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  resetBtnText: {
+    color: "#ff4d4d",
+    fontSize: 12,
+    letterSpacing: 2,
+    fontFamily: "altFont",
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(9, 10, 15, 0.85)",
@@ -368,5 +394,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     letterSpacing: 3,
   },
-  // ===== END ADDED STYLES =====
 });
