@@ -14,6 +14,9 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
+//TODO: add a ? mark screen  that will explain the extra rules of the game
+// KAIBABUCKS
+
 export default function WelcomeScreen() {
    const navigation = useNavigation();
   // TODO: wire these up to real player data
