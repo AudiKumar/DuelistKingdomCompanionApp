@@ -23,7 +23,7 @@ export default function DuelScreen() {
   // from the WelcomeScreen wager flow)
   const [wageredChips] = useState(0); //TODO: Pipe in real data
   const [wallet] = useState(10); //TODO: Pipe in real data
-  const [lifePoints, setLifePoints] = useState(4000); 
+  const [lifePoints, setLifePoints] = useState(6000); 
   const [duelEnded, setDuelEnded] = useState(false); // this is for when the duel has ended by the user's life points have been depleted
   const [lifePointsModalVisible, setLifePointsModalVisible] = useState(false);
   const [lifePointsAction, setLifePointsAction] = useState<LifePointAction>(null);
