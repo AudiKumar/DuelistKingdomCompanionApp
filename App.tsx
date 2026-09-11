@@ -49,6 +49,7 @@ export const RootStack = createNativeStackNavigator({
       screen: WelcomeScreen,
       options: {
         title: "", 
+        headerShown: false,
         headerTransparent: true, 
         headerStyle: {
           backgroundColor: '#00000000', 
