@@ -138,6 +138,7 @@ export default function WelcomeScreen() {
         transparent
         animationType="fade"
         onRequestClose={closeWagerModal}
+        supportedOrientations={['landscape']}
       >
         <Pressable style={styles.overlay} onPress={closeWagerModal}>
           <KeyboardAvoidingView

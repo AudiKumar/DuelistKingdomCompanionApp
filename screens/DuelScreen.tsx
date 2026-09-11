@@ -147,6 +147,7 @@ export default function DuelScreen() {
         transparent
         animationType="fade"
         onRequestClose={closeLifePointsModal}
+        supportedOrientations={['landscape']}
       >
         <Pressable style={styles.overlay} onPress={closeLifePointsModal}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -196,6 +197,7 @@ export default function DuelScreen() {
         transparent
         animationType="fade"
         onRequestClose={() => setCoinFlipModalVisible(false)}
+        supportedOrientations={['landscape']}
       >
         <Pressable style={styles.overlay} onPress={() => setCoinFlipModalVisible(false)}>
           <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
@@ -219,6 +221,7 @@ export default function DuelScreen() {
         transparent
         animationType="fade"
         onRequestClose={() => setSettingsModalVisible(false)}
+        supportedOrientations={['landscape']}
       >
         <Pressable style={styles.overlay} onPress={() => setSettingsModalVisible(false)}>
           <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
