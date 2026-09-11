@@ -35,7 +35,7 @@ export default function WelcomeScreen() {
       try {
         const storedName = await AsyncStorage.getItem(USER_NAME_KEY);
         const stars = await AsyncStorage.getItem(USER_STAR_BALANCE);
-        const money = await AsyncStorage.getItem(USER_KAIBUCKS_BALANCE)
+        const money = await AsyncStorage.getItem(USER_KAIBUCKS_BALANCE);
         setPlayerName(storedName);
         const parsedWallet = stars != null ? Number(stars) : NaN;
         const parsedKaibucks = money != null ? Number(money): NaN; 
@@ -87,7 +87,8 @@ export default function WelcomeScreen() {
       return;
     }
 
-    const newBalance = starWalletBalance - amount;
+    const newStarBalance = starWalletBalance - amount;
+    const newKaibaBucksBalance = kaibaBucks - 0; // this is just a placeholder for now, since we are not wagering kaibucks yet
 
     try {
       await AsyncStorage.setItem(USER_WAGER_TYPE, "STARS");
@@ -101,11 +102,18 @@ export default function WelcomeScreen() {
       console.error("Failed to save amount bet to Async Storage")
     }
 
-    setStarWalletBalance(newBalance); // this would be needed because you need to add this back
+    setStarWalletBalance(newStarBalance); // this would be needed because you need to add this back
     try {
-      await AsyncStorage.setItem(USER_STAR_BALANCE, String(newBalance));
+      await AsyncStorage.setItem(USER_STAR_BALANCE, String(newStarBalance));
     } catch (error) {
       console.error("Failed to save wallet balance to AsyncStorage", error);
+    }
+    
+    setKaibaBucksBalance(newKaibaBucksBalance); // this would be needed because you need to add this back
+    try {
+      await AsyncStorage.setItem(USER_KAIBUCKS_BALANCE, String(newKaibaBucksBalance));
+    } catch (error) {
+      console.error("Failed to save kaibucks balance to AsyncStorage", error);
     }
 
     setWagerModalVisible(false);
