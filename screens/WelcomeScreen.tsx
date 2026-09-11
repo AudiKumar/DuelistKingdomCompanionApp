@@ -151,7 +151,7 @@ export default function WelcomeScreen() {
                 Star Balance: <Text style={styles.highlight}>{starWalletBalance}</Text> Stars
               </Text>
 
-              <TextInput // TODO: this could probably be changed to a plus and minus button 
+              <TextInput
                 style={styles.input}
                 value={wagerInput}
                 onChangeText={setWagerInput}

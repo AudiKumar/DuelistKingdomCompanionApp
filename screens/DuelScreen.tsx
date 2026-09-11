@@ -30,6 +30,7 @@ export default function DuelScreen() {
   const [lifePointsInput, setLifePointsInput] = useState('');
 
   const [coinFlipModalVisible, setCoinFlipModalVisible] = useState(false);
+  const [diceModalVisible, setDiceModalVisible] = useState(false);
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
 
   function handleEndDuel() {
@@ -49,6 +50,17 @@ export default function DuelScreen() {
     setLifePointsAction(action);
     setLifePointsInput('');
     setLifePointsModalVisible(true);
+  }
+
+  function flipCoin() : String {
+    const coin = Math.floor(Math.random() * 2) 
+    console.log("Coin: ", coin)
+    return coin === 0 ? "HEADS": "TAILS"
+  }
+
+  function rollDice (): number {
+    const dice = Math.floor(Math.random() * 6)
+    return dice; 
   }
 
   function closeLifePointsModal() {
@@ -191,7 +203,7 @@ export default function DuelScreen() {
         </Pressable>
       </Modal>
 
-      {/* Coin Flip Modal (placeholder) */}
+      {/* Coin Flip Modal */}
       <Modal
         visible={coinFlipModalVisible}
         transparent
@@ -202,12 +214,34 @@ export default function DuelScreen() {
         <Pressable style={styles.overlay} onPress={() => setCoinFlipModalVisible(false)}>
           <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.modalTitle}>COIN FLIP</Text>
-            <Text style={styles.modalSubtitle}>TODO</Text>
-
+            <Text style={styles.modalSubtitle}>{flipCoin()}</Text>
             <TouchableOpacity
               style={[styles.modalBtn, styles.confirmBtn]}
               activeOpacity={0.8}
               onPress={() => setCoinFlipModalVisible(false)}
+            >
+              <Text style={styles.wagerBtnText}>CLOSE</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+      
+      {/* Dice Roll Modal */}
+      <Modal
+        visible={diceModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDiceModalVisible(false)}
+        supportedOrientations={['landscape']}
+      >
+        <Pressable style={styles.overlay} onPress={() => setDiceModalVisible(false)}>
+          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+            <Text style={styles.modalTitle}>DICE ROLL</Text>
+            <Text style={styles.modalSubtitle}>{rollDice()}</Text>
+            <TouchableOpacity
+              style={[styles.modalBtn, styles.confirmBtn]}
+              activeOpacity={0.8}
+              onPress={() => setDiceModalVisible(false)}
             >
               <Text style={styles.wagerBtnText}>CLOSE</Text>
             </TouchableOpacity>
