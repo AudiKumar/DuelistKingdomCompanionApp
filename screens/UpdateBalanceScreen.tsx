@@ -144,6 +144,7 @@ export default function UpdateBalanceScreen() {
 
       {/* Balance Adjustment Modal */}
       <Modal
+        supportedOrientations={['landscape']}
         visible={balanceModalVisible}
         transparent
         animationType="fade"
