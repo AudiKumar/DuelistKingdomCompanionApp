@@ -54,12 +54,11 @@ export default function DuelScreen() {
 
   function flipCoin() : String {
     const coin = Math.floor(Math.random() * 2) 
-    console.log("Coin: ", coin)
     return coin === 0 ? "HEADS": "TAILS"
   }
 
   function rollDice (): number {
-    const dice = Math.floor(Math.random() * 6)
+    const dice = Math.floor(Math.random() * 6) + 1
     return dice; 
   }
 
@@ -141,6 +140,14 @@ export default function DuelScreen() {
           onPress={() => setCoinFlipModalVisible(true)}
         >
           <Text style={styles.wagerBtnText}>COIN FLIP</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.coinFlipBtn}
+          activeOpacity={0.8}
+          onPress={() => setDiceModalVisible(true)}
+        >
+          <Text style={styles.wagerBtnText}>DICE ROLL</Text>
         </TouchableOpacity>
       </View>
 
@@ -356,6 +363,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#9A416F',
     paddingVertical: 12,
     paddingHorizontal: 24,
+    marginBottom: 24,
     borderWidth: 1.5,
     borderColor: 'rgb(255, 230, 0)',
   },
