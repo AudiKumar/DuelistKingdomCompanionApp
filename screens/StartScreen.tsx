@@ -31,6 +31,7 @@ type StarLayerProps = {
 function StarLayer({ count, size, duration, opacity = 1 }: StarLayerProps) {
   const translateY = useRef(new Animated.Value(0)).current;
 
+  // Generate star coordinates once
   const stars = useMemo(
     () =>
       Array.from({ length: count }).map(() => ({
@@ -40,58 +41,74 @@ function StarLayer({ count, size, duration, opacity = 1 }: StarLayerProps) {
     [count]
   );
 
+  // Manage animation lifecycle cleanly
   useFocusEffect(
     useCallback(() => {
       translateY.setValue(0);
 
-      const loop = Animated.loop(
+      const animation = Animated.loop(
         Animated.timing(translateY, {
           toValue: -height,
           duration,
           easing: Easing.linear,
           useNativeDriver: true,
-        }),
-        { iterations: -1 }
+        })
       );
-      loop.start();
 
-      return () => loop.stop();
-    }, [translateY, duration])
+      animation.start();
+
+      return () => {
+        animation.stop();
+      };
+    }, [duration, translateY])
   );
 
   return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        StyleSheet.absoluteFillObject,
-        { opacity, transform: [{ translateY }] },
-      ]}
-    >
-      {stars.map((s, i) => (
-        <View
-          key={`a-${i}`}
-          style={[
-            styles.star,
-            { left: s.left, top: s.top, width: size, height: size, borderRadius: size / 2 },
-          ]}
-        />
-      ))}
-      {stars.map((s, i) => (
-        <View
-          key={`b-${i}`}
-          style={[
-            styles.star,
-            {
-              left: s.left,
-              top: s.top + height,
-              width: size,
-              height: size,
-              borderRadius: size / 2,
-            },
-          ]}
-        />
-      ))}
-    </Animated.View>
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <Animated.View
+        style={[
+          StyleSheet.absoluteFill,
+          {
+            opacity,
+            transform: [{ translateY }],
+          },
+        ]}
+      >
+        {/* Primary star set */}
+        {stars.map((s, i) => (
+          <View
+            key={`star-a-${i}`}
+            style={[
+              styles.star,
+              {
+                left: s.left,
+                top: s.top,
+                width: size,
+                height: size,
+                borderRadius: size / 2,
+              },
+            ]}
+          />
+        ))}
+
+        {/* Seamless tiling duplicate set shifted down by 1 screen height */}
+        {stars.map((s, i) => (
+          <View
+            key={`star-b-${i}`}
+            style={[
+              styles.star,
+              {
+                left: s.left,
+                top: s.top + height,
+                width: size,
+                height: size,
+                borderRadius: size / 2,
+              },
+            ]}
+          />
+        ))}
+      </Animated.View>
+    </View>
   );
 }
 
@@ -179,15 +196,15 @@ export default function StartScreen() {
 
   return (
     <View style={styles.container}>
-      <Svg height={height} width={width} style={StyleSheet.absoluteFillObject}>
+      <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
         <Defs>
           <RadialGradient id="bg" cx="50%" cy="100%" rx="90%" ry="70%" gradientUnits="userSpaceOnUse" fx="50%" fy="100%">
             <Stop offset="0" stopColor="#9A416FFF" stopOpacity="1" />
             <Stop offset="1" stopColor="#090A0F" stopOpacity="1" />
           </RadialGradient>
         </Defs>
-        <Rect x={0} y={0} width={width} height={height} fill="#090A0F" />
-        <Rect x={0} y={0} width={width} height={height} fill="url(#bg)" />
+        <Rect x={0} y={0} width="100%"  height="100%"  fill="#090A0F" />
+        <Rect x={0} y={0} width="100%"  height="100%" fill="url(#bg)" />
       </Svg>
 
       <StarLayer count={140} size={1} duration={50000} opacity={0.9} />
