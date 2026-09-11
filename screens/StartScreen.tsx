@@ -245,6 +245,7 @@ export default function StartScreen() {
         visible={!isCheckingUser && showNameModal}
         animationType="fade"
         transparent
+        supportedOrientations={['landscape']}
         onRequestClose={() => {}}
       >
         <KeyboardAvoidingView

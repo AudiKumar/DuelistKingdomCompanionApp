@@ -13,16 +13,42 @@ import {
   Pressable,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type LifePointAction = 'add' | 'subtract' | null;
 
+const USER_STARS_WAGERED = "@user_stars_wagered"
+const OP_STARS_WAGERED = "@op_stars_wagered"
+const USER_STAR_BALANCE = "@dk_star_wallet";
+
 export default function DuelScreen() {
+
+  const [opStarsWaged, setOpStarsWaged] = useState(0);
+  const [userStarsWaged, setUserStarsWaged] = useState(0);
+  const [starWalletBalance, setStarWalletBalance] = useState(0);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const opStar = await AsyncStorage.getItem(USER_STARS_WAGERED); 
+        const userStar = await AsyncStorage.getItem(OP_STARS_WAGERED);
+        const stars = await AsyncStorage.getItem(USER_STAR_BALANCE);
+
+        setOpStarsWaged(Number(opStar)); 
+        setUserStarsWaged(Number(userStar)); 
+        setStarWalletBalance(Number(stars)); 
+      } catch (error) {
+        console.error("failed to read and get required fields for duel screen")
+      }
+
+    })(); 
+  }, [])
+
   const navigation = useNavigation();
 
   // TODO: wire these up to real data (likely passed in via navigation params
   // from the WelcomeScreen wager flow)
-  const [wageredChips] = useState(0); //TODO: Pipe in real data
-  const [wallet] = useState(10); //TODO: Pipe in real data
+
   const [lifePoints, setLifePoints] = useState(6000); 
   const [duelEnded, setDuelEnded] = useState(false); // this is for when the duel has ended by the user's life points have been depleted
   const [lifePointsModalVisible, setLifePointsModalVisible] = useState(false);
@@ -30,6 +56,7 @@ export default function DuelScreen() {
   const [lifePointsInput, setLifePointsInput] = useState('');
 
   const [coinFlipModalVisible, setCoinFlipModalVisible] = useState(false);
+  const [diceModalVisible, setDiceModalVisible] = useState(false);
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
 
   function handleEndDuel() {
@@ -49,6 +76,16 @@ export default function DuelScreen() {
     setLifePointsAction(action);
     setLifePointsInput('');
     setLifePointsModalVisible(true);
+  }
+
+  function flipCoin() : String {
+    const coin = Math.floor(Math.random() * 2) 
+    return coin === 0 ? "HEADS": "TAILS"
+  }
+
+  function rollDice (): number {
+    const dice = Math.floor(Math.random() * 6) + 1
+    return dice; 
   }
 
   function closeLifePointsModal() {
@@ -72,8 +109,21 @@ export default function DuelScreen() {
 
   function handleForfeit() {
     setSettingsModalVisible(false);
-    // TODO: real forfeit logic (record loss, clear wager, etc.)
     showAlert('You forfeited the duel.');
+    (navigation.navigate as any)('Welcome');
+  }
+
+  async function handleWin() {
+    console.log("Handle win")
+    const starsWon = opStarsWaged + userStarsWaged;
+    const currStars = starWalletBalance
+    const newBalance = starsWon + currStars; 
+
+    console.log("Stars Won: ", starsWon, "\ncurrStars: " + currStars + "\nNew Balance: " + newBalance )
+    setStarWalletBalance(newBalance); 
+    await AsyncStorage.setItem(USER_STAR_BALANCE, String(newBalance))
+
+    showAlert("You won"); 
     (navigation.navigate as any)('Welcome');
   }
 
@@ -87,19 +137,6 @@ export default function DuelScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Top-left: wager & wallet readout */}
-      <View style={styles.topLeft}>
-        <Text style={styles.chipsText} numberOfLines={1}>
-          Wagered: <Text style={styles.highlight}>{wageredChips}</Text> Chips
-        </Text>
-
-      </View>
-      <View style={styles.topRight}> 
-        <Text style={styles.chipsText} numberOfLines={1}>
-          Wallet: <Text style={styles.highlight}>{wallet}</Text> Stars
-        </Text>
-      </View>
-
       {/* Center: lifepoints */}
       <View style={styles.centerContent}>
         <Text style={styles.lpLabel}>YOUR LIFEPOINTS</Text>
@@ -130,6 +167,14 @@ export default function DuelScreen() {
         >
           <Text style={styles.wagerBtnText}>COIN FLIP</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.coinFlipBtn}
+          activeOpacity={0.8}
+          onPress={() => setDiceModalVisible(true)}
+        >
+          <Text style={styles.wagerBtnText}>DICE ROLL</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Bottom-left: settings / forfeit */}
@@ -139,6 +184,17 @@ export default function DuelScreen() {
         onPress={() => setSettingsModalVisible(true)}
       >
         <Text style={styles.settingsIcon}>⚙</Text>
+
+        
+      </TouchableOpacity>
+
+      {/* Win Game Button */}
+      <TouchableOpacity
+        style={styles.Win}
+        activeOpacity={0.8}
+        onPress={() => handleWin()}
+      >
+        <Text style={styles.settingsIcon}>WIN GAME</Text>
       </TouchableOpacity>
 
       {/* Lifepoints Modal */}
@@ -147,6 +203,7 @@ export default function DuelScreen() {
         transparent
         animationType="fade"
         onRequestClose={closeLifePointsModal}
+        supportedOrientations={['landscape']}
       >
         <Pressable style={styles.overlay} onPress={closeLifePointsModal}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -190,22 +247,45 @@ export default function DuelScreen() {
         </Pressable>
       </Modal>
 
-      {/* Coin Flip Modal (placeholder) */}
+      {/* Coin Flip Modal */}
       <Modal
         visible={coinFlipModalVisible}
         transparent
         animationType="fade"
         onRequestClose={() => setCoinFlipModalVisible(false)}
+        supportedOrientations={['landscape']}
       >
         <Pressable style={styles.overlay} onPress={() => setCoinFlipModalVisible(false)}>
           <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.modalTitle}>COIN FLIP</Text>
-            <Text style={styles.modalSubtitle}>TODO</Text>
-
+            <Text style={styles.modalSubtitle}>{flipCoin()}</Text>
             <TouchableOpacity
               style={[styles.modalBtn, styles.confirmBtn]}
               activeOpacity={0.8}
               onPress={() => setCoinFlipModalVisible(false)}
+            >
+              <Text style={styles.wagerBtnText}>CLOSE</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+      
+      {/* Dice Roll Modal */}
+      <Modal
+        visible={diceModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDiceModalVisible(false)}
+        supportedOrientations={['landscape']}
+      >
+        <Pressable style={styles.overlay} onPress={() => setDiceModalVisible(false)}>
+          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+            <Text style={styles.modalTitle}>DICE ROLL</Text>
+            <Text style={styles.modalSubtitle}>{rollDice()}</Text>
+            <TouchableOpacity
+              style={[styles.modalBtn, styles.confirmBtn]}
+              activeOpacity={0.8}
+              onPress={() => setDiceModalVisible(false)}
             >
               <Text style={styles.wagerBtnText}>CLOSE</Text>
             </TouchableOpacity>
@@ -219,6 +299,7 @@ export default function DuelScreen() {
         transparent
         animationType="fade"
         onRequestClose={() => setSettingsModalVisible(false)}
+        supportedOrientations={['landscape']}
       >
         <Pressable style={styles.overlay} onPress={() => setSettingsModalVisible(false)}>
           <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
@@ -254,11 +335,17 @@ const styles = StyleSheet.create({
   },
 
   /* Top-left readout */
-  topLeft: {
+  Win: {
     position: 'absolute',
-    top: 16,
-    left: 16,
+    top: 26,
+    right: 36,
     gap: 4,
+    backgroundColor: '#9A416F',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginBottom: 24,
+    borderWidth: 1.5,
+    borderColor: 'rgb(255, 230, 0)',
   },
 
   topRight: {
@@ -319,6 +406,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#9A416F',
     paddingVertical: 12,
     paddingHorizontal: 24,
+    marginBottom: 24,
     borderWidth: 1.5,
     borderColor: 'rgb(255, 230, 0)',
   },
