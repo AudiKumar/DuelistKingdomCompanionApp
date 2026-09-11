@@ -1,5 +1,5 @@
 //TODO: welcome modal that asks the user for their given information. Name and User Name Mostly, maybe a profile picture for the fun of it
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -50,6 +50,7 @@ export default function WelcomeScreen() {
 
   const [wagerModalVisible, setWagerModalVisible] = useState(false);
   const [wagerInput, setWagerInput] = useState('');
+  const userWagerType = useRef<WagerType>(null);
   const [opWagerTypeInput, setOpWagerTypeInput] = useState<WagerType>(null);
   const [opWagerModalVisible, setOpWagerModalVisible] = useState(false);
   
@@ -122,6 +123,39 @@ export default function WelcomeScreen() {
     
   }
 
+  async function confirmAlternateWager() {
+    const newKaibaBucksBalance = kaibaBucks - (userWagerType.current === "KAIBUX" ? 1200 : 0); // this is just a placeholder for now, since we are not wagering kaibucks yet
+
+    try {
+      await AsyncStorage.setItem(USER_WAGER_TYPE, String(userWagerType.current));
+    } catch (error) {
+      console.error("Failed to save user wager type to Async Storage")
+    }
+
+    try {
+      await AsyncStorage.setItem(USER_STARS_WAGERED, "0")
+    } catch (error) {
+      console.error("Failed to save amount bet to Async Storage")
+    }
+
+    setStarWalletBalance(starWalletBalance); // this would be needed because you need to add this back
+    try {
+      await AsyncStorage.setItem(USER_STAR_BALANCE, String(starWalletBalance));
+    } catch (error) {
+      console.error("Failed to save wallet balance to AsyncStorage", error);
+    }
+    
+    setKaibaBucksBalance(newKaibaBucksBalance); // this would be needed because you need to add this back
+    try {
+      await AsyncStorage.setItem(USER_KAIBUCKS_BALANCE, String(newKaibaBucksBalance));
+    } catch (error) {
+      console.error("Failed to save kaibucks balance to AsyncStorage", error);
+    }
+
+    setWagerModalVisible(false);
+    setOpWagerModalVisible(true);
+  }
+
 
   useEffect(() => {
     if (opWagerTypeInput !== null) {
@@ -176,7 +210,7 @@ export default function WelcomeScreen() {
 
       {/* Wager Modal */}
       <Modal
-        visible={wagerModalVisible}
+        visible={wagerModalVisible && (starWalletBalance > 0)}
         transparent
         animationType="fade"
         onRequestClose={closeWagerModal}
@@ -218,6 +252,63 @@ export default function WelcomeScreen() {
                   onPress={confirmUserWager}
                 >
                   <Text style={styles.wagerBtnText}>CONFIRM</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </KeyboardAvoidingView>
+        </Pressable>
+      </Modal>
+
+      {/* Zero-Balance Wager Modal */}
+      <Modal
+        visible={wagerModalVisible && (starWalletBalance <= 0)}
+        transparent
+        animationType="fade"
+        onRequestClose={closeWagerModal}
+        supportedOrientations={['landscape']}
+      >
+        <Pressable style={styles.overlay} onPress={closeWagerModal}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            {/* Stop taps inside the card from closing the modal */}
+            <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+              <Text style={styles.modalTitle}>PLACE YOUR WAGER</Text>
+              <Text style={styles.modalSubtitle}>
+                Star Balance: <Text style={styles.highlight}>{starWalletBalance}</Text> Stars
+              </Text>
+
+              <View style={styles.modalButtonRow}>
+                <TouchableOpacity
+                  style={[styles.wagerBtn, kaibaBucks < 1200 && styles.disabledWagerBtn]}
+                  activeOpacity={0.8}
+                  onPress={async () => {
+                    userWagerType.current = "KAIBUX";
+                    await confirmAlternateWager();
+                  }}
+                  disabled={kaibaBucks < 1200}
+                >
+                  <Text style={styles.wagerBtnText}>KAIBUX</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.wagerBtn]}
+                  activeOpacity={0.8}
+                  onPress={async () => {
+                    userWagerType.current = "CARD";
+                    await confirmAlternateWager();
+                  }}
+                >
+                  <Text style={styles.wagerBtnText}>CARD</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.modalButtonRow}>
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.cancelBtn]}
+                  activeOpacity={0.8}
+                  onPress={closeWagerModal}
+                >
+                  <Text style={styles.wagerBtnText}>CANCEL</Text>
                 </TouchableOpacity>
               </View>
             </Pressable>
@@ -315,6 +406,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderWidth: 1.5,
     borderColor: 'rgb(255, 230, 0)',
+  },
+  disabledWagerBtn: {
+    backgroundColor: '#545353',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginBottom: 24,
+    borderWidth: 1.5,
+    borderColor: 'rgb(70, 3, 70)',
   },
   wagerBtnText: {
     color: '#FFFFFF',
