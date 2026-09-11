@@ -13,7 +13,7 @@ import {
   Pressable,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type LifePointAction = 'add' | 'subtract' | null;
@@ -56,6 +56,10 @@ export default function DuelScreen() {
   const [lifePointsAction, setLifePointsAction] = useState<LifePointAction>(null);
   const [lifePointsInput, setLifePointsInput] = useState('');
   const lifePointsIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null); // Ref to store the interval ID for clearing later
+
+  const duelDiskStartPlayer = useAudioPlayer(require('../assets/duel-disk-start.wav'));
+  const duelDiskStartStatus = useAudioPlayerStatus(duelDiskStartPlayer);
+  const duelStartedRef = useRef(false); // Ref to track if the duel has started to prevent replaying the sound
 
   const beepLoSrc = require('../assets/beep-lo.wav');
   
@@ -116,6 +120,13 @@ export default function DuelScreen() {
     // Cleanup on unmount
     return () => stopLifePointsAnimation();
   }, []);
+
+  useEffect(() => {
+    if (duelDiskStartStatus.isLoaded && !duelStartedRef.current) {
+      duelStartedRef.current = true; // Mark the duel as started to prevent replaying the sound on double-load
+      duelDiskStartPlayer.play();
+    }
+  }, [duelDiskStartStatus.isLoaded]);
 
   function playLifePointBeepLo() {
     const player = beepLoPlayers[beepLoIndex.current];
