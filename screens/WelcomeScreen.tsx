@@ -18,6 +18,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const USER_NAME_KEY = "@duelist_kingdom_user_name";
 const USER_STAR_BALANCE = "@dk_star_wallet";
 const USER_KAIBUCKS_BALANCE = "@dk_kaibucks"
+const USER_STARS_WAGERED = "@user_stars_wagered"
+const OP_STARS_WAGERED = "@op_stars_wagered"
+
 
 export default function WelcomeScreen() {
   const [playerName, setPlayerName] = useState<string | null>(null);
@@ -44,6 +47,9 @@ export default function WelcomeScreen() {
 
   const [wagerModalVisible, setWagerModalVisible] = useState(false);
   const [wagerInput, setWagerInput] = useState('');
+  const [opWagerInput, setOpWagerinput] = useState('');
+  const [opWagerModalVisible, setOpWagerModalVisible] = useState(false);
+  
 
   function showAlert(message: string) {
     if (Platform.OS === 'web') {
@@ -61,7 +67,8 @@ export default function WelcomeScreen() {
   function closeWagerModal() {
     setWagerModalVisible(false);
   }
-  async function confirmWager() { // TODO: maybe wagering your best card // this would be a last condition. 
+
+  async function confirmUserWager() { // TODO: maybe wagering your best card // this would be a last condition. 
     const amount = Number(wagerInput);
 
     if (!wagerInput.trim() || Number.isNaN(amount)) {
@@ -72,15 +79,21 @@ export default function WelcomeScreen() {
       showAlert('Your wager has to be at least 1 star.');
       return;
     }
-    if (amount > starWalletBalance) { // CHANGED: was `wallet` (undefined)
+    if (amount > starWalletBalance) {
       showAlert("You don't have enough stars for that wager.");
       return;
     }
 
-    const newBalance = starWalletBalance - amount; // CHANGED: was `prev - amount` on a string
+    const newBalance = starWalletBalance - amount;
+  
 
-    // TODO: actually kick off the duel with this wager amount
-    setStarWalletBalance(newBalance);
+    try {
+      await AsyncStorage.setItem(USER_STARS_WAGERED, String(amount))
+    } catch (error) {
+      console.error("Failed to save amount bet to Async Storage")
+    }
+
+    setStarWalletBalance(newBalance); // this would be needed because you need to add this back
     try {
       await AsyncStorage.setItem(USER_STAR_BALANCE, String(newBalance));
     } catch (error) {
@@ -88,9 +101,31 @@ export default function WelcomeScreen() {
     }
 
     setWagerModalVisible(false);
-    showAlert(`Wagered ${amount} stars. Good luck!`);
+    //showAlert(`Wagered ${amount} stars. Good luck!`);
+    setOpWagerModalVisible(true);
+    
+  }
 
-    (navigation.navigate as any)("Duel"); 
+  async function confirmOpWager () {
+    const opWager = Number(opWagerInput); 
+
+    if (!opWagerInput.trim() || Number.isNaN(opWager)) {
+      showAlert('Enter a valid number of stars to wager.');
+      return;
+    }
+
+    if (opWager <= 0) {
+      showAlert('Enemy wager must be least 1 star.');
+      return;
+    }
+
+    try {
+      await AsyncStorage.setItem(OP_STARS_WAGERED, String(opWager));
+    } catch (error) {
+      console.error("failed to save OPs starts wagered", error);
+    }
+
+    (navigation.navigate as any)("Duel");
   }
 
   function goToUpdateBalance() {
@@ -130,7 +165,7 @@ export default function WelcomeScreen() {
         >
           <Text style={styles.wagerBtnText}>UPDATE BALANCE</Text>
         </TouchableOpacity>
-      </View>
+        </View>
 
       {/* Wager Modal */}
       <Modal
@@ -173,7 +208,55 @@ export default function WelcomeScreen() {
                 <TouchableOpacity
                   style={[styles.modalBtn, styles.confirmBtn]}
                   activeOpacity={0.8}
-                  onPress={confirmWager}
+                  onPress={confirmUserWager}
+                >
+                  <Text style={styles.wagerBtnText}>CONFIRM</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </KeyboardAvoidingView>
+        </Pressable>
+      </Modal>
+
+      {/* Oponent Wager Modal */}
+      <Modal
+        visible={opWagerModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={ ()=> setOpWagerModalVisible(false) }
+        supportedOrientations={['landscape']}
+      >
+        <Pressable style={styles.overlay} onPress={() => setOpWagerModalVisible(false)}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            {/* Stop taps inside the card from closing the modal */}
+            <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+              <Text style={styles.modalTitle}>ENTER ENEMY WAGER</Text>
+
+              <TextInput
+                style={styles.input}
+                value={opWagerInput}
+                onChangeText={setOpWagerinput}
+                placeholderTextColor="#8f86b3"
+                keyboardType="number-pad"
+                autoFocus
+                maxLength={6}
+              />
+
+              <View style={styles.modalButtonRow}>
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.cancelBtn]}
+                  activeOpacity={0.8}
+                  onPress={() => setOpWagerModalVisible(false)}
+                >
+                  <Text style={styles.wagerBtnText}>CANCEL</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.confirmBtn]}
+                  activeOpacity={0.8}
+                  onPress={confirmOpWager}
                 >
                   <Text style={styles.wagerBtnText}>CONFIRM</Text>
                 </TouchableOpacity>
