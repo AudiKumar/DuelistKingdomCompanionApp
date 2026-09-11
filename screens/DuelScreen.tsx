@@ -1,5 +1,5 @@
 //TODO: pull wagered chips, wallet, and starting lifepoints from real game/navigation state
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   Pressable,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type LifePointAction = 'add' | 'subtract' | null;
@@ -54,6 +55,15 @@ export default function DuelScreen() {
   const [lifePointsModalVisible, setLifePointsModalVisible] = useState(false);
   const [lifePointsAction, setLifePointsAction] = useState<LifePointAction>(null);
   const [lifePointsInput, setLifePointsInput] = useState('');
+  const lifePointsIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null); // Ref to store the interval ID for clearing later
+
+  const beepLoSrc = require('../assets/beep-lo.wav');
+  
+  const beepLoPlayerA = useAudioPlayer(beepLoSrc);
+  const beepLoPlayerB = useAudioPlayer(beepLoSrc);
+  const beepLoPlayers = [beepLoPlayerA, beepLoPlayerB]; // Array of beepLo players to alternate between
+  const beepHiPlayer = useAudioPlayer(require('../assets/beep-hi.wav'));
+  const beepLoIndex = useRef(0); // Ref to keep track of which beepLo player to use next
 
   const [coinFlipModalVisible, setCoinFlipModalVisible] = useState(false);
   const [diceModalVisible, setDiceModalVisible] = useState(false);
@@ -93,6 +103,32 @@ export default function DuelScreen() {
     setLifePointsAction(null);
   }
 
+  function stopLifePointsAnimation() {
+    if (lifePointsIntervalRef.current) {
+      clearInterval(lifePointsIntervalRef.current);
+      lifePointsIntervalRef.current = null;
+    }
+  }
+
+  useEffect(() => {
+    // Set Audio mode
+    setAudioModeAsync({ playsInSilentMode: true, interruptionMode: 'mixWithOthers' })
+    // Cleanup on unmount
+    return () => stopLifePointsAnimation();
+  }, []);
+
+  function playLifePointBeepLo() {
+    const player = beepLoPlayers[beepLoIndex.current];
+    beepLoIndex.current = (beepLoIndex.current + 1) % beepLoPlayers.length;
+    player.seekTo(0);
+    player.play();
+  }
+
+  function playLifePointBeepHi() {
+    beepHiPlayer.seekTo(0);
+    beepHiPlayer.play();
+  }
+
   function confirmLifePoints() {
     const amount = Number(lifePointsInput);
 
@@ -101,9 +137,43 @@ export default function DuelScreen() {
       return;
     }
 
-    setLifePoints((prev) =>
-      lifePointsAction === 'add' ? prev + amount : Math.max(0, prev - amount)
-    );
+    // Configuration
+    const beepNumberInterval = 200; // How often a beep happens in terms of number of life points changed
+    const timeBetweenBeepsMs = 250; // How often a beep happens in milliseconds
+    const lifePointChangeAmount = 10; // How much life points change per "tick" of the animation interval
+
+    // Calculation
+    const intervalMs = timeBetweenBeepsMs / (beepNumberInterval / lifePointChangeAmount); // Calculate the interval in milliseconds based on the desired beep frequency
+    const startTime = Date.now(); // Store the start time of the animation; we will use this to calculated elapsed time in case the interval gets throttled
+    const originalLifePoints = lifePoints; // Store the original life points to calculate the expected number of ticks based on elapsed time
+    const dir = lifePointsAction === 'add' ? 1 : -1;
+    const targetLifePoints = Math.max(0, lifePoints + dir * amount);
+    const reachedTarget = lifePointsAction === 'add' ? ((lp: number, tgt: number) => lp >= tgt) : ((lp: number, tgt: number) => lp <= tgt);
+    const nextBeepThreshold = lifePointsAction === 'add' ? ((lp: number) => beepNumberInterval * (Math.floor(lp / beepNumberInterval) + dir)) : ((lp: number) => beepNumberInterval * (Math.ceil(lp / beepNumberInterval) + dir));
+
+    stopLifePointsAnimation(); // Stop any existing animation before starting a new one
+
+    const prevLifePointsRef = { current: originalLifePoints }; // Ref to store the previous life points for beep threshold checking
+    
+    if (Math.abs(targetLifePoints - originalLifePoints) >= beepNumberInterval) {
+      playLifePointBeepLo(); // Play the first beep immediately if the change is large enough
+    }
+    // Animation
+    lifePointsIntervalRef.current = setInterval(() => {
+      const elapsedTime = Date.now() - startTime; // Calculate the elapsed time since the animation started
+      const expectedTicks = Math.floor(elapsedTime / intervalMs); // Calculate the expected number of ticks based on elapsed time
+      let nextLifePoints = originalLifePoints + dir * lifePointChangeAmount * expectedTicks; // Calculate the next life points based on the expected number of ticks
+      if (reachedTarget(nextLifePoints, targetLifePoints)) {
+        nextLifePoints = targetLifePoints;
+        stopLifePointsAnimation();
+        playLifePointBeepHi();
+      }
+      else if (reachedTarget(nextLifePoints, nextBeepThreshold(prevLifePointsRef.current))) {
+        playLifePointBeepLo();
+      }
+      prevLifePointsRef.current = nextLifePoints; // Update the previous life points for the next interval check
+      setLifePoints(nextLifePoints);
+    }, intervalMs);
     closeLifePointsModal();
   }
 

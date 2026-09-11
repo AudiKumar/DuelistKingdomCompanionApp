@@ -30,7 +30,8 @@
       "expo-font",
       "expo-splash-screen",
       "expo-sqlite",
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-audio"
     ]
   }
 }
