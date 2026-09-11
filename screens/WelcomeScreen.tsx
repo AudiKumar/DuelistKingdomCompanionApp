@@ -124,7 +124,7 @@ export default function WelcomeScreen() {
     } catch (error) {
       console.error("failed to save OPs starts wagered", error);
     }
-
+    setOpWagerModalVisible(false); 
     (navigation.navigate as any)("Duel");
   }
 
