@@ -15,29 +15,38 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { WagerType } from './WelcomeScreen';
 
 type LifePointAction = 'add' | 'subtract' | null;
 
-const USER_STARS_WAGERED = "@user_stars_wagered"
-const OP_STARS_WAGERED = "@op_stars_wagered"
+const USER_WAGER_TYPE = "@user_wager_type";
+const USER_STARS_WAGERED = "@user_stars_wagered";
+const OP_WAGER_TYPE = "@op_wager_type";
 const USER_STAR_BALANCE = "@dk_star_wallet";
+const USER_KAIBUCKS_BALANCE = "@dk_kaibucks";
 
 export default function DuelScreen() {
 
-  const [opStarsWaged, setOpStarsWaged] = useState(0);
+  const [userWagerType, setUserWagerType] = useState<WagerType>(null);
+  const [opWagerType, setOpWagerType] = useState<WagerType>(null);
   const [userStarsWaged, setUserStarsWaged] = useState(0);
   const [starWalletBalance, setStarWalletBalance] = useState(0);
+  const [kaibaBucksBalance, setKaibaBucksBalance] = useState(0);
 
   useEffect(() => {
     (async () => {
       try {
-        const opStar = await AsyncStorage.getItem(USER_STARS_WAGERED); 
-        const userStar = await AsyncStorage.getItem(OP_STARS_WAGERED);
+        const userWagedType = await AsyncStorage.getItem(USER_WAGER_TYPE);
+        const opWagedType = await AsyncStorage.getItem(OP_WAGER_TYPE);
+        const userStarWager = await AsyncStorage.getItem(USER_STARS_WAGERED); 
         const stars = await AsyncStorage.getItem(USER_STAR_BALANCE);
+        const kaibucks = await AsyncStorage.getItem(USER_KAIBUCKS_BALANCE);
 
-        setOpStarsWaged(Number(opStar)); 
-        setUserStarsWaged(Number(userStar)); 
+        setUserWagerType(userWagedType as WagerType);
+        setOpWagerType(opWagedType as WagerType);
+        setUserStarsWaged(Number(userStarWager)); 
         setStarWalletBalance(Number(stars)); 
+        setKaibaBucksBalance(Number(kaibucks));
       } catch (error) {
         console.error("failed to read and get required fields for duel screen")
       }
@@ -196,13 +205,20 @@ export default function DuelScreen() {
 
   async function handleWin() {
     console.log("Handle win")
-    const starsWon = opStarsWaged + userStarsWaged;
-    const currStars = starWalletBalance
-    const newBalance = starsWon + currStars; 
+    const opStarsWagered = opWagerType === "STARS" ? (userWagerType === "STARS" ? userStarsWaged : 1) : 0;
+    const starsWon = userStarsWaged + opStarsWagered;
+    const kaibucksWon = (userWagerType === "KAIBUX" ? 1200 : 0) + (opWagerType === "KAIBUX" ? 1200 : 0);
+    const currStars = starWalletBalance;
+    const kaibucks = kaibaBucksBalance;
+    const newStarBalance = starsWon + currStars;
+    const newKaibucksBalance = kaibucks + kaibucksWon;
 
-    console.log("Stars Won: ", starsWon, "\ncurrStars: " + currStars + "\nNew Balance: " + newBalance )
-    setStarWalletBalance(newBalance); 
-    await AsyncStorage.setItem(USER_STAR_BALANCE, String(newBalance))
+    console.log("Stars Won: ", starsWon, "\ncurrStars: " + currStars + "\nNew Balance: " + newStarBalance );
+    console.log("Kaibucks Won: ", kaibucksWon, "\ncurrKaibucks: " + kaibucks + "\nNew Balance: " + newKaibucksBalance );
+    setStarWalletBalance(newStarBalance); 
+    setKaibaBucksBalance(newKaibucksBalance);
+    await AsyncStorage.setItem(USER_STAR_BALANCE, String(newStarBalance))
+    await AsyncStorage.setItem(USER_KAIBUCKS_BALANCE, String(newKaibucksBalance))
 
     showAlert("You won"); 
     (navigation.navigate as any)('Welcome');
