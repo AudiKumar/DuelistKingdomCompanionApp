@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const USER_KAIBUX_BALANCE = '@dk_kaibux';
+const USER_STAR_BALANCE = "@dk_star_wallet";
 
 type BalanceAction = 'add' | 'subtract' | null;
 
@@ -23,6 +24,7 @@ export default function UpdateBalanceScreen() {
   const navigation = useNavigation();
 
   const [kaibuxBalance, setKaibuxBalance] = useState<number>(500);
+  const [starWalletBalance, setStarWalletBalance] = useState<number>(0);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
 
   const [balanceModalVisible, setBalanceModalVisible] = useState(false);
@@ -35,14 +37,13 @@ export default function UpdateBalanceScreen() {
 
     (async () => {
       try {
-        const stored = await AsyncStorage.getItem(USER_KAIBUX_BALANCE);
+        const kaibux = await AsyncStorage.getItem(USER_KAIBUX_BALANCE);
+        const stars = await AsyncStorage.getItem(USER_STAR_BALANCE);
         if (!isMounted) return;
-
-        // null/undefined (never set) or corrupt/non-numeric -> fall back to 500
-        const parsed = stored != null ? Number(stored) : NaN;
-        setKaibuxBalance(Number.isFinite(parsed) ? parsed : 500);
+        setKaibuxBalance(Number(kaibux));
+        setStarWalletBalance(Number(stars));
       } catch (error) {
-        console.error('Failed to read kaibux balance from AsyncStorage', error);
+        console.error('Failed to read kaibux and or starwallet balance from AsyncStorage', error);
       } finally {
         if (isMounted) setIsLoadingBalance(false);
       }
