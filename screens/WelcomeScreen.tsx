@@ -88,7 +88,6 @@ export default function WelcomeScreen() {
       return;
     }
 
-    //const newStarBalance = starWalletBalance - amount;
     const newkaibuxBalance = kaibux - 0; // this is just a placeholder for now, since we are not wagering kaibux yet
 
     try {
@@ -103,12 +102,7 @@ export default function WelcomeScreen() {
       console.error("Failed to save amount bet to Async Storage")
     }
 
-    /*setStarWalletBalance(newStarBalance); // this would be needed because you need to add this back
-    try {
-      await AsyncStorage.setItem(USER_STAR_BALANCE, String(newStarBalance));
-    } catch (error) {
-      console.error("Failed to save wallet balance to AsyncStorage", error);
-    }*/
+
     
     setKaibuxBalance(newkaibuxBalance); // this would be needed because you need to add this back
     try {
@@ -184,7 +178,7 @@ export default function WelcomeScreen() {
         <Text style={styles.statText}>
           Stars: <Text style={styles.highlight}>{starWalletBalance}</Text>
         </Text>
-        <Text style = {styles.statText}> Wallet Balance: {kaibux} kaibux</Text>
+        <Text style = {styles.statText}> Wallet Balance: {kaibux} KAIBUX</Text>
       </View>
 
       {/* Action Buttons */}

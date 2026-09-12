@@ -51,6 +51,7 @@ export const RootStack = createNativeStackNavigator({
       screen: UpdateBalanceScreen,
         options: {
         title: "", 
+        headerShown: false,
         headerTransparent: true, 
         headerStyle: {
           backgroundColor: '#00000000', 
