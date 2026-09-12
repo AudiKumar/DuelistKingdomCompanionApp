@@ -19,7 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const { width, height } = Dimensions.get("window");
 const USER_NAME_KEY = "@duelist_kingdom_user_name";
 const USER_STAR_BALANCE = "@dk_star_wallet";
-const USER_KAIBUCKS_BALANCE = "@dk_kaibucks"
+const USER_KAIBUCKS_BALANCE = "@dk_kaibucks";
 
 type StarLayerProps = {
   count: number;

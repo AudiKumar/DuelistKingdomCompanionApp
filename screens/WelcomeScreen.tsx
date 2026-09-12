@@ -17,9 +17,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const USER_NAME_KEY = "@duelist_kingdom_user_name";
 const USER_STAR_BALANCE = "@dk_star_wallet";
-const USER_KAIBUCKS_BALANCE = "@dk_kaibucks"
-const USER_STARS_WAGERED = "@user_stars_wagered"
-const OP_STARS_WAGERED = "@op_stars_wagered"
+const USER_KAIBUCKS_BALANCE = "@dk_kaibucks";
+const USER_WAGER_TYPE = "@user_wager_type";
+const USER_STARS_WAGERED = "@user_stars_wagered";
+const OP_WAGER_TYPE = "@op_wager_type";
+
+export type WagerType = "STARS" | "KAIBUX" | "CARD" | null;
 
 
 export default function WelcomeScreen() {
@@ -32,7 +35,7 @@ export default function WelcomeScreen() {
       try {
         const storedName = await AsyncStorage.getItem(USER_NAME_KEY);
         const stars = await AsyncStorage.getItem(USER_STAR_BALANCE);
-        const money = await AsyncStorage.getItem(USER_KAIBUCKS_BALANCE)
+        const money = await AsyncStorage.getItem(USER_KAIBUCKS_BALANCE);
         setPlayerName(storedName);
         const parsedWallet = stars != null ? Number(stars) : NaN;
         const parsedKaibucks = money != null ? Number(money): NaN; 
@@ -47,7 +50,7 @@ export default function WelcomeScreen() {
 
   const [wagerModalVisible, setWagerModalVisible] = useState(false);
   const [wagerInput, setWagerInput] = useState('');
-  const [opWagerInput, setOpWagerinput] = useState('');
+  const [opWagerTypeInput, setOpWagerTypeInput] = useState<WagerType>(null);
   const [opWagerModalVisible, setOpWagerModalVisible] = useState(false);
   
 
@@ -84,8 +87,14 @@ export default function WelcomeScreen() {
       return;
     }
 
-    const newBalance = starWalletBalance - amount;
-  
+    const newStarBalance = starWalletBalance - amount;
+    const newKaibaBucksBalance = kaibaBucks - 0; // this is just a placeholder for now, since we are not wagering kaibucks yet
+
+    try {
+      await AsyncStorage.setItem(USER_WAGER_TYPE, "STARS");
+    } catch (error) {
+      console.error("Failed to save user wager type to Async Storage")
+    }
 
     try {
       await AsyncStorage.setItem(USER_STARS_WAGERED, String(amount))
@@ -93,11 +102,18 @@ export default function WelcomeScreen() {
       console.error("Failed to save amount bet to Async Storage")
     }
 
-    setStarWalletBalance(newBalance); // this would be needed because you need to add this back
+    setStarWalletBalance(newStarBalance); // this would be needed because you need to add this back
     try {
-      await AsyncStorage.setItem(USER_STAR_BALANCE, String(newBalance));
+      await AsyncStorage.setItem(USER_STAR_BALANCE, String(newStarBalance));
     } catch (error) {
       console.error("Failed to save wallet balance to AsyncStorage", error);
+    }
+    
+    setKaibaBucksBalance(newKaibaBucksBalance); // this would be needed because you need to add this back
+    try {
+      await AsyncStorage.setItem(USER_KAIBUCKS_BALANCE, String(newKaibaBucksBalance));
+    } catch (error) {
+      console.error("Failed to save kaibucks balance to AsyncStorage", error);
     }
 
     setWagerModalVisible(false);
@@ -106,27 +122,18 @@ export default function WelcomeScreen() {
     
   }
 
-  async function confirmOpWager () {
-    const opWager = Number(opWagerInput); 
 
-    if (!opWagerInput.trim() || Number.isNaN(opWager)) {
-      showAlert('Enter a valid number of stars to wager.');
-      return;
+  useEffect(() => {
+    if (opWagerTypeInput !== null) {
+      try {
+        AsyncStorage.setItem(OP_WAGER_TYPE, String(opWagerTypeInput));
+      } catch (error) {
+        console.error("Failed to save opponent wager type to AsyncStorage", error);
+      }
+      setOpWagerModalVisible(false);
+      (navigation.navigate as any)("Duel");
     }
-
-    if (opWager <= 0) {
-      showAlert('Enemy wager must be least 1 star.');
-      return;
-    }
-
-    try {
-      await AsyncStorage.setItem(OP_STARS_WAGERED, String(opWager));
-    } catch (error) {
-      console.error("failed to save OPs starts wagered", error);
-    }
-    setOpWagerModalVisible(false); 
-    (navigation.navigate as any)("Duel");
-  }
+  }, [opWagerTypeInput]);
 
   function goToUpdateBalance() {
     (navigation.navigate as any)("UpdateBalance");
@@ -218,7 +225,7 @@ export default function WelcomeScreen() {
         </Pressable>
       </Modal>
 
-      {/* Oponent Wager Modal */}
+      {/* Opponent Wager Modal */}
       <Modal
         visible={opWagerModalVisible}
         transparent
@@ -232,17 +239,31 @@ export default function WelcomeScreen() {
           >
             {/* Stop taps inside the card from closing the modal */}
             <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
-              <Text style={styles.modalTitle}>ENTER ENEMY WAGER</Text>
+              <Text style={styles.modalTitle}>ENEMY WAGER</Text>
 
-              <TextInput
-                style={styles.input}
-                value={opWagerInput}
-                onChangeText={setOpWagerinput}
-                placeholderTextColor="#8f86b3"
-                keyboardType="number-pad"
-                autoFocus
-                maxLength={6}
-              />
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={styles.wagerBtn}
+                  activeOpacity={0.8}
+                  onPress={() => setOpWagerTypeInput("STARS")}
+                >
+                  <Text style={styles.wagerBtnText}>STARS</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.wagerBtn}
+                  activeOpacity={0.8}
+                  onPress={() => setOpWagerTypeInput("KAIBUX")}
+                >
+                  <Text style={styles.wagerBtnText}>KAIBUX</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.wagerBtn}
+                  activeOpacity={0.8}
+                  onPress={() => setOpWagerTypeInput("CARD")}
+                >
+                  <Text style={styles.wagerBtnText}>CARD</Text>
+                </TouchableOpacity>
+              </View>
 
               <View style={styles.modalButtonRow}>
                 <TouchableOpacity
@@ -251,14 +272,6 @@ export default function WelcomeScreen() {
                   onPress={() => setOpWagerModalVisible(false)}
                 >
                   <Text style={styles.wagerBtnText}>CANCEL</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.modalBtn, styles.confirmBtn]}
-                  activeOpacity={0.8}
-                  onPress={confirmOpWager}
-                >
-                  <Text style={styles.wagerBtnText}>CONFIRM</Text>
                 </TouchableOpacity>
               </View>
             </Pressable>
