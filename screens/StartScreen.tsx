@@ -194,7 +194,7 @@ export default function StartScreen() {
     }
   }, []);
 
-    const handleResetStorage = useCallback(async () => { 
+    /*const handleResetStorage = useCallback(async () => { 
       try {
         await AsyncStorage.removeItem(USER_NAME_KEY);
         setNameInput("");
@@ -202,7 +202,7 @@ export default function StartScreen() {
       } catch (error) {
         console.error("Failed to clear clear name", error);
       }
-    }, []);
+    }, []);*/ 
 
   return (
     <View style={styles.container}>
@@ -249,13 +249,13 @@ export default function StartScreen() {
             <Text style={styles.renameBtnText}>CHANGE NAME</Text>
           </TouchableOpacity>
 
-            <TouchableOpacity
+          {/*<TouchableOpacity
             style={styles.renameBtn}
             activeOpacity={0.8}
             onPress={handleResetStorage}
           >
             <Text style={styles.renameBtnText}>RESET</Text>
-          </TouchableOpacity>
+          </TouchableOpacity>*/}
         </View>
       </View>
 
