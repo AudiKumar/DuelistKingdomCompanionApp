@@ -15,17 +15,20 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const USER_KAIBUCKS_BALANCE = '@dk_kaibucks';
+const USER_KAIBUX_BALANCE = '@dk_kaibux';
+const USER_STAR_BALANCE = "@dk_star_wallet";
 
 type BalanceAction = 'add' | 'subtract' | null;
+type BalanceType = "KAIBUX" | "STARS"; 
 
 export default function UpdateBalanceScreen() {
   const navigation = useNavigation();
 
-  const [kaibucksBalance, setKaibucksBalance] = useState<number>(500);
+  const [kaibuxBalance, setKaibuxBalance] = useState<number>(500);
+  const [starWalletBalance, setStarWalletBalance] = useState<number>(0);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
-
-  const [balanceModalVisible, setBalanceModalVisible] = useState(false);
+  const [balanceModalVisible, setBalanceModalVisible] = useState(false); // NAME SHOULD HAVE BEEN CHANGED BUT I AM EEPY (3AM)
+  const [starBalanceModalVisible, setStarBalanceModalVisible] = useState(false); 
   const [balanceAction, setBalanceAction] = useState<BalanceAction>(null);
   const [balanceInput, setBalanceInput] = useState('');
 
@@ -35,14 +38,13 @@ export default function UpdateBalanceScreen() {
 
     (async () => {
       try {
-        const stored = await AsyncStorage.getItem(USER_KAIBUCKS_BALANCE);
+        const kaibux = await AsyncStorage.getItem(USER_KAIBUX_BALANCE);
+        const stars = await AsyncStorage.getItem(USER_STAR_BALANCE);
         if (!isMounted) return;
-
-        // null/undefined (never set) or corrupt/non-numeric -> fall back to 500
-        const parsed = stored != null ? Number(stored) : NaN;
-        setKaibucksBalance(Number.isFinite(parsed) ? parsed : 500);
+        setKaibuxBalance(Number(kaibux));
+        setStarWalletBalance(Number(stars));
       } catch (error) {
-        console.error('Failed to read Kaibucks balance from AsyncStorage', error);
+        console.error('Failed to read kaibux and or starwallet balance from AsyncStorage', error);
       } finally {
         if (isMounted) setIsLoadingBalance(false);
       }
@@ -61,10 +63,12 @@ export default function UpdateBalanceScreen() {
     }
   }
 
-  function openBalanceModal(action: BalanceAction) {
+
+  function openBalanceModal(action: BalanceAction, type: BalanceType) {
     setBalanceAction(action);
     setBalanceInput('');
-    setBalanceModalVisible(true);
+    // setBalanceModalVisible === kaibux
+    type === 'KAIBUX' ? setBalanceModalVisible(true) : setStarBalanceModalVisible(true)
   }
 
   function closeBalanceModal() {
@@ -72,35 +76,48 @@ export default function UpdateBalanceScreen() {
     setBalanceAction(null);
   }
 
-  async function persistBalance(newBalance: number) {
+  function closeStarBalanceModal() {
+    setStarBalanceModalVisible(false);
+    setBalanceAction(null);
+  }
+
+  async function persistBalance(newBalance: number, balanceType: BalanceType) {
     try {
-      await AsyncStorage.setItem(USER_KAIBUCKS_BALANCE, String(newBalance));
+      balanceType === 'KAIBUX' 
+      ? await AsyncStorage.setItem(USER_KAIBUX_BALANCE, String(newBalance)) :
+      await AsyncStorage.setItem(USER_STAR_BALANCE, String(newBalance));
     } catch (error) {
-      console.error('Failed to save Kaibucks balance to AsyncStorage', error);
+      console.error('Failed to save kaibux or stars balance to AsyncStorage', error);
     }
   }
 
-  async function confirmBalanceChange() {
+  async function confirmBalanceChange(type: BalanceType) {
     const amount = Number(balanceInput);
 
     if (!balanceInput.trim() || Number.isNaN(amount) || amount <= 0) {
-      showAlert('Enter a valid number of Kaibucks.');
+      showAlert('Enter a valid number.');
       return;
     }
 
-    if (balanceAction === 'subtract' && amount > kaibucksBalance) {
-      showAlert("You don't have enough Kaibucks for that.");
+    if (balanceAction === 'subtract' && amount > kaibuxBalance) {
+      showAlert("You don't have enough for that.");
       return;
     }
 
-    const newBalance =
-      balanceAction === 'add'
-        ? kaibucksBalance + amount
-        : kaibucksBalance - amount;
+    if (balanceAction === 'subtract' && amount > starWalletBalance) {
+      showAlert("You don't have enough for that.");
+      return;
+    }
+    
+    // change logic to account for both the star chips and kaibux
+    const balance = type ==='KAIBUX' ? kaibuxBalance : starWalletBalance
+    const newBalance = balanceAction === 'add' ? balance + amount : balance - amount;
 
-    setKaibucksBalance(newBalance);
-    await persistBalance(newBalance);
-    closeBalanceModal();
+    // if the type is kaibux set kaibuxBalance
+    if (type ==='KAIBUX') { setKaibuxBalance(newBalance);} 
+    else  { setStarWalletBalance(newBalance)}
+    await persistBalance(newBalance, type);
+    type ==='KAIBUX' ? closeBalanceModal() : closeStarBalanceModal()// closeStarBalanceModal should also be here
   }
 
   function handleDone() {
@@ -110,16 +127,18 @@ export default function UpdateBalanceScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.centerContent}>
-        <Text style={styles.lpLabel}>KAIBUCKS BALANCE</Text>
-        <Text style={styles.lpValue}>
-          {isLoadingBalance ? '—' : kaibucksBalance}
-        </Text>
-
+       <View style={styles.centerContent}>
+        {/* Kaibux Balance */}
         <View style={styles.lpButtonRow}>
+          <Text style={styles.lpLabel}>KAIBUX BALANCE</Text>
+          <Text style={styles.lpValue}>
+            {isLoadingBalance ? '—' : kaibuxBalance}
+          </Text>
+
           <TouchableOpacity
             style={styles.lpBtn}
             activeOpacity={0.8}
-            onPress={() => openBalanceModal('subtract')}
+            onPress={() => openBalanceModal('subtract', 'KAIBUX')}
           >
             <Text style={styles.lpBtnText}>−</Text>
           </TouchableOpacity>
@@ -127,12 +146,39 @@ export default function UpdateBalanceScreen() {
           <TouchableOpacity
             style={styles.lpBtn}
             activeOpacity={0.8}
-            onPress={() => openBalanceModal('add')}
+            onPress={() => openBalanceModal('add' ,'KAIBUX')}
+          >
+            <Text style={styles.lpBtnText}>+</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {/* Stars Balance */}
+        <View style={styles.lpButtonRow}>
+
+          <Text style={styles.lpLabel}>STARS BALANCE</Text>
+          <Text style={styles.lpValue}>
+            {isLoadingBalance ? '—' : starWalletBalance}
+          </Text>
+
+          <TouchableOpacity
+            style={styles.lpBtn}
+            activeOpacity={0.8}
+            onPress={() => openBalanceModal('subtract', 'STARS')}
+          >
+            <Text style={styles.lpBtnText}>−</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.lpBtn}
+            activeOpacity={0.8}
+            onPress={() => openBalanceModal('add', 'STARS')}
           >
             <Text style={styles.lpBtnText}>+</Text>
           </TouchableOpacity>
         </View>
 
+
+        {/* DONE BUTTON */}
         <TouchableOpacity
           style={styles.doneBtn}
           activeOpacity={0.8}
@@ -141,8 +187,9 @@ export default function UpdateBalanceScreen() {
           <Text style={styles.wagerBtnText}>DONE</Text>
         </TouchableOpacity>
       </View>
+      </View>
 
-      {/* Balance Adjustment Modal */}
+      {/* Kaibux Balance Adjustment Modal */}
       <Modal
         supportedOrientations={['landscape']}
         visible={balanceModalVisible}
@@ -154,10 +201,10 @@ export default function UpdateBalanceScreen() {
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
             <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
               <Text style={styles.modalTitle}>
-                {balanceAction === 'add' ? 'ADD KAIBUCKS' : 'SUBTRACT KAIBUCKS'}
+                {balanceAction === 'add' ? 'ADD KAIBUX' : 'SUBTRACT KAIBUX'}
               </Text>
               <Text style={styles.modalSubtitle}>
-                Current: <Text style={styles.highlight}>{kaibucksBalance}</Text> Kaibucks
+                Current: <Text style={styles.highlight}>{kaibuxBalance}</Text> KAIBUX
               </Text>
 
               <TextInput
@@ -182,7 +229,57 @@ export default function UpdateBalanceScreen() {
                 <TouchableOpacity
                   style={[styles.modalBtn, styles.confirmBtn]}
                   activeOpacity={0.8}
-                  onPress={confirmBalanceChange}
+                  onPress={() => confirmBalanceChange('KAIBUX')}
+                >
+                  <Text style={styles.wagerBtnText}>CONFIRM</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </KeyboardAvoidingView>
+        </Pressable>
+      </Modal>
+
+      {/* Star Balance Adjustment Modal */}
+      <Modal
+        supportedOrientations={['landscape']}
+        visible={starBalanceModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeStarBalanceModal}
+      >
+        <Pressable style={styles.overlay} onPress={closeStarBalanceModal}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+              <Text style={styles.modalTitle}>
+                {balanceAction === 'add' ? 'ADD STARS' : 'SUBTRACT STARS'}
+              </Text>
+              <Text style={styles.modalSubtitle}>
+                Current: <Text style={styles.highlight}>{starWalletBalance}</Text> STARS
+              </Text>
+
+              <TextInput
+                style={styles.input}
+                value={balanceInput}
+                onChangeText={setBalanceInput}
+                placeholderTextColor="#8f86b3"
+                keyboardType="number-pad"
+                autoFocus
+                maxLength={6}
+              />
+
+              <View style={styles.modalButtonRow}>
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.cancelBtn]}
+                  activeOpacity={0.8}
+                  onPress={closeStarBalanceModal}
+                >
+                  <Text style={styles.wagerBtnText}>CANCEL</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.confirmBtn]}
+                  activeOpacity={0.8}
+                  onPress={() => confirmBalanceChange('STARS')}
                 >
                   <Text style={styles.wagerBtnText}>CONFIRM</Text>
                 </TouchableOpacity>
@@ -213,6 +310,8 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
     fontFamily: 'mainFont',
     marginBottom: 4,
+    alignItems: 'center',
+    alignSelf: 'center'
   },
   lpValue: {
     color: '#ffffff',

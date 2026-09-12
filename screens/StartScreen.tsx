@@ -19,7 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const { width, height } = Dimensions.get("window");
 const USER_NAME_KEY = "@duelist_kingdom_user_name";
 const USER_STAR_BALANCE = "@dk_star_wallet";
-const USER_KAIBUCKS_BALANCE = "@dk_kaibucks";
+const USER_KAIBUX_BALANCE = "@dk_kaibux";
 
 type StarLayerProps = {
   count: number;
@@ -153,7 +153,7 @@ export default function StartScreen() {
           try {
             await AsyncStorage.multiSet([
               [USER_STAR_BALANCE, "10"],
-              [USER_KAIBUCKS_BALANCE, "500"],
+              [USER_KAIBUX_BALANCE, "500"],
             ]);
           } catch (walletError) {
             console.error("Failed to initialize wallet balance", walletError);
@@ -184,7 +184,7 @@ export default function StartScreen() {
     }
   }, [nameInput]);
 
-  const handleResetStorage = useCallback(async () => {
+  const handleRename = useCallback(async () => {
     try {
       await AsyncStorage.removeItem(USER_NAME_KEY);
       setNameInput("");
@@ -193,6 +193,16 @@ export default function StartScreen() {
       console.error("Failed to clear clear name", error);
     }
   }, []);
+
+    /*const handleResetStorage = useCallback(async () => { 
+      try {
+        await AsyncStorage.removeItem(USER_NAME_KEY);
+        setNameInput("");
+        setShowNameModal(true);
+      } catch (error) {
+        console.error("Failed to clear clear name", error);
+      }
+    }, []);*/ 
 
   return (
     <View style={styles.container}>
@@ -234,10 +244,18 @@ export default function StartScreen() {
           <TouchableOpacity
             style={styles.renameBtn}
             activeOpacity={0.8}
-            onPress={handleResetStorage}
+            onPress={handleRename}
           >
             <Text style={styles.renameBtnText}>CHANGE NAME</Text>
           </TouchableOpacity>
+
+          {/*<TouchableOpacity
+            style={styles.renameBtn}
+            activeOpacity={0.8}
+            onPress={handleResetStorage}
+          >
+            <Text style={styles.renameBtnText}>RESET</Text>
+          </TouchableOpacity>*/}
         </View>
       </View>
 
