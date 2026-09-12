@@ -184,7 +184,7 @@ export default function StartScreen() {
     }
   }, [nameInput]);
 
-  const handleResetStorage = useCallback(async () => {
+  const handleRename = useCallback(async () => {
     try {
       await AsyncStorage.removeItem(USER_NAME_KEY);
       setNameInput("");
@@ -234,7 +234,7 @@ export default function StartScreen() {
           <TouchableOpacity
             style={styles.renameBtn}
             activeOpacity={0.8}
-            onPress={handleResetStorage}
+            onPress={handleRename}
           >
             <Text style={styles.renameBtnText}>CHANGE NAME</Text>
           </TouchableOpacity>
