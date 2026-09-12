@@ -19,7 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const { width, height } = Dimensions.get("window");
 const USER_NAME_KEY = "@duelist_kingdom_user_name";
 const USER_STAR_BALANCE = "@dk_star_wallet";
-const USER_KAIBUCKS_BALANCE = "@dk_kaibucks";
+const USER_KAIBUX_BALANCE = "@dk_kaibux";
 
 type StarLayerProps = {
   count: number;
@@ -153,7 +153,7 @@ export default function StartScreen() {
           try {
             await AsyncStorage.multiSet([
               [USER_STAR_BALANCE, "10"],
-              [USER_KAIBUCKS_BALANCE, "500"],
+              [USER_KAIBUX_BALANCE, "500"],
             ]);
           } catch (walletError) {
             console.error("Failed to initialize wallet balance", walletError);

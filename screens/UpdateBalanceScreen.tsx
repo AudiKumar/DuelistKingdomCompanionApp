@@ -15,14 +15,14 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const USER_KAIBUCKS_BALANCE = '@dk_kaibucks';
+const USER_KAIBUX_BALANCE = '@dk_kaibux';
 
 type BalanceAction = 'add' | 'subtract' | null;
 
 export default function UpdateBalanceScreen() {
   const navigation = useNavigation();
 
-  const [kaibucksBalance, setKaibucksBalance] = useState<number>(500);
+  const [kaibuxBalance, setKaibuxBalance] = useState<number>(500);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
 
   const [balanceModalVisible, setBalanceModalVisible] = useState(false);
@@ -35,14 +35,14 @@ export default function UpdateBalanceScreen() {
 
     (async () => {
       try {
-        const stored = await AsyncStorage.getItem(USER_KAIBUCKS_BALANCE);
+        const stored = await AsyncStorage.getItem(USER_KAIBUX_BALANCE);
         if (!isMounted) return;
 
         // null/undefined (never set) or corrupt/non-numeric -> fall back to 500
         const parsed = stored != null ? Number(stored) : NaN;
-        setKaibucksBalance(Number.isFinite(parsed) ? parsed : 500);
+        setKaibuxBalance(Number.isFinite(parsed) ? parsed : 500);
       } catch (error) {
-        console.error('Failed to read Kaibucks balance from AsyncStorage', error);
+        console.error('Failed to read kaibux balance from AsyncStorage', error);
       } finally {
         if (isMounted) setIsLoadingBalance(false);
       }
@@ -74,9 +74,9 @@ export default function UpdateBalanceScreen() {
 
   async function persistBalance(newBalance: number) {
     try {
-      await AsyncStorage.setItem(USER_KAIBUCKS_BALANCE, String(newBalance));
+      await AsyncStorage.setItem(USER_KAIBUX_BALANCE, String(newBalance));
     } catch (error) {
-      console.error('Failed to save Kaibucks balance to AsyncStorage', error);
+      console.error('Failed to save kaibux balance to AsyncStorage', error);
     }
   }
 
@@ -84,21 +84,21 @@ export default function UpdateBalanceScreen() {
     const amount = Number(balanceInput);
 
     if (!balanceInput.trim() || Number.isNaN(amount) || amount <= 0) {
-      showAlert('Enter a valid number of Kaibucks.');
+      showAlert('Enter a valid number of kaibux.');
       return;
     }
 
-    if (balanceAction === 'subtract' && amount > kaibucksBalance) {
-      showAlert("You don't have enough Kaibucks for that.");
+    if (balanceAction === 'subtract' && amount > kaibuxBalance) {
+      showAlert("You don't have enough kaibux for that.");
       return;
     }
 
     const newBalance =
       balanceAction === 'add'
-        ? kaibucksBalance + amount
-        : kaibucksBalance - amount;
+        ? kaibuxBalance + amount
+        : kaibuxBalance - amount;
 
-    setKaibucksBalance(newBalance);
+    setKaibuxBalance(newBalance);
     await persistBalance(newBalance);
     closeBalanceModal();
   }
@@ -110,9 +110,9 @@ export default function UpdateBalanceScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.centerContent}>
-        <Text style={styles.lpLabel}>KAIBUCKS BALANCE</Text>
+        <Text style={styles.lpLabel}>kaibux BALANCE</Text>
         <Text style={styles.lpValue}>
-          {isLoadingBalance ? '—' : kaibucksBalance}
+          {isLoadingBalance ? '—' : kaibuxBalance}
         </Text>
 
         <View style={styles.lpButtonRow}>
@@ -154,10 +154,10 @@ export default function UpdateBalanceScreen() {
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
             <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
               <Text style={styles.modalTitle}>
-                {balanceAction === 'add' ? 'ADD KAIBUCKS' : 'SUBTRACT KAIBUCKS'}
+                {balanceAction === 'add' ? 'ADD kaibux' : 'SUBTRACT kaibux'}
               </Text>
               <Text style={styles.modalSubtitle}>
-                Current: <Text style={styles.highlight}>{kaibucksBalance}</Text> Kaibucks
+                Current: <Text style={styles.highlight}>{kaibuxBalance}</Text> kaibux
               </Text>
 
               <TextInput

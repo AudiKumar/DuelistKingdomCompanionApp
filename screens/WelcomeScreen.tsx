@@ -17,7 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const USER_NAME_KEY = "@duelist_kingdom_user_name";
 const USER_STAR_BALANCE = "@dk_star_wallet";
-const USER_KAIBUCKS_BALANCE = "@dk_kaibucks";
+const USER_kaibux_BALANCE = "@dk_kaibux";
 const USER_WAGER_TYPE = "@user_wager_type";
 const USER_STARS_WAGERED = "@user_stars_wagered";
 const OP_WAGER_TYPE = "@op_wager_type";
@@ -28,19 +28,19 @@ export type WagerType = "STARS" | "KAIBUX" | "CARD" | null;
 export default function WelcomeScreen() {
   const [playerName, setPlayerName] = useState<string | null>(null);
   const [starWalletBalance, setStarWalletBalance] = useState<number>(0);
-  const [kaibaBucks, setKaibaBucksBalance] = useState<number>(0);
+  const [kaibux, setKaibuxBalance] = useState<number>(0);
 
   useEffect(() => {
     (async () => {
       try {
         const storedName = await AsyncStorage.getItem(USER_NAME_KEY);
         const stars = await AsyncStorage.getItem(USER_STAR_BALANCE);
-        const money = await AsyncStorage.getItem(USER_KAIBUCKS_BALANCE);
+        const money = await AsyncStorage.getItem(USER_kaibux_BALANCE);
         setPlayerName(storedName);
         const parsedWallet = stars != null ? Number(stars) : NaN;
-        const parsedKaibucks = money != null ? Number(money): NaN; 
+        const parsedkaibux = money != null ? Number(money): NaN; 
         setStarWalletBalance(Number.isFinite(parsedWallet) ? parsedWallet : 10);
-        setKaibaBucksBalance(Number.isFinite(parsedKaibucks) ? parsedKaibucks : 500);      
+        setKaibuxBalance(Number.isFinite(parsedkaibux) ? parsedkaibux : 500);      
       } catch (error) {
         console.error("Failed to read user name from AsyncStorage", error);
       }
@@ -89,7 +89,7 @@ export default function WelcomeScreen() {
     }
 
     const newStarBalance = starWalletBalance - amount;
-    const newKaibaBucksBalance = kaibaBucks - 0; // this is just a placeholder for now, since we are not wagering kaibucks yet
+    const newkaibuxBalance = kaibux - 0; // this is just a placeholder for now, since we are not wagering kaibux yet
 
     try {
       await AsyncStorage.setItem(USER_WAGER_TYPE, "STARS");
@@ -110,11 +110,11 @@ export default function WelcomeScreen() {
       console.error("Failed to save wallet balance to AsyncStorage", error);
     }
     
-    setKaibaBucksBalance(newKaibaBucksBalance); // this would be needed because you need to add this back
+    setKaibuxBalance(newkaibuxBalance); // this would be needed because you need to add this back
     try {
-      await AsyncStorage.setItem(USER_KAIBUCKS_BALANCE, String(newKaibaBucksBalance));
+      await AsyncStorage.setItem(USER_kaibux_BALANCE, String(newkaibuxBalance));
     } catch (error) {
-      console.error("Failed to save kaibucks balance to AsyncStorage", error);
+      console.error("Failed to save kaibux balance to AsyncStorage", error);
     }
 
     setWagerModalVisible(false);
@@ -124,7 +124,7 @@ export default function WelcomeScreen() {
   }
 
   async function confirmAlternateWager() {
-    const newKaibaBucksBalance = kaibaBucks - (userWagerType.current === "KAIBUX" ? 1200 : 0); // this is just a placeholder for now, since we are not wagering kaibucks yet
+    const newkaibuxBalance = kaibux - (userWagerType.current === "KAIBUX" ? 1200 : 0); // this is just a placeholder for now, since we are not wagering kaibux yet
 
     try {
       await AsyncStorage.setItem(USER_WAGER_TYPE, String(userWagerType.current));
@@ -145,11 +145,11 @@ export default function WelcomeScreen() {
       console.error("Failed to save wallet balance to AsyncStorage", error);
     }
     
-    setKaibaBucksBalance(newKaibaBucksBalance); // this would be needed because you need to add this back
+    setKaibuxBalance(newkaibuxBalance); // this would be needed because you need to add this back
     try {
-      await AsyncStorage.setItem(USER_KAIBUCKS_BALANCE, String(newKaibaBucksBalance));
+      await AsyncStorage.setItem(USER_kaibux_BALANCE, String(newkaibuxBalance));
     } catch (error) {
-      console.error("Failed to save kaibucks balance to AsyncStorage", error);
+      console.error("Failed to save kaibux balance to AsyncStorage", error);
     }
 
     setWagerModalVisible(false);
@@ -184,7 +184,7 @@ export default function WelcomeScreen() {
         <Text style={styles.statText}>
           Stars: <Text style={styles.highlight}>{starWalletBalance}</Text>
         </Text>
-        <Text style = {styles.statText}> Wallet Balance: {kaibaBucks} Kaibucks</Text>
+        <Text style = {styles.statText}> Wallet Balance: {kaibux} kaibux</Text>
       </View>
 
       {/* Action Buttons */}
@@ -280,13 +280,13 @@ export default function WelcomeScreen() {
 
               <View style={styles.modalButtonRow}>
                 <TouchableOpacity
-                  style={[styles.wagerBtn, kaibaBucks < 1200 && styles.disabledWagerBtn]}
+                  style={[styles.wagerBtn, kaibux < 1200 && styles.disabledWagerBtn]}
                   activeOpacity={0.8}
                   onPress={async () => {
                     userWagerType.current = "KAIBUX";
                     await confirmAlternateWager();
                   }}
-                  disabled={kaibaBucks < 1200}
+                  disabled={kaibux < 1200}
                 >
                   <Text style={styles.wagerBtnText}>KAIBUX</Text>
                 </TouchableOpacity>
