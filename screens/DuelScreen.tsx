@@ -322,7 +322,7 @@ export default function DuelScreen() {
       <TouchableOpacity
         style={styles.Win}
         activeOpacity={0.8}
-        onPress={() => handleWin()}
+        onLongPress={() => handleWin()}
       >
         <Text style={styles.settingsIcon}>WIN GAME</Text>
       </TouchableOpacity>
