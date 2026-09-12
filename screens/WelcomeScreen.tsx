@@ -225,7 +225,7 @@ export default function WelcomeScreen() {
         </Pressable>
       </Modal>
 
-      {/* Opponent Wager Modal */}
+      {/* Opponent Wager Modal  should probably change the name because oponent wager model should be the case where you wager all the stuff*/}
       <Modal
         visible={opWagerModalVisible}
         transparent
@@ -238,7 +238,7 @@ export default function WelcomeScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           >
             {/* Stop taps inside the card from closing the modal */}
-            <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+            <Pressable style={styles.enemyModalCard} onPress={(e) => e.stopPropagation()}>
               <Text style={styles.modalTitle}>ENEMY WAGER</Text>
 
               <View style={styles.buttonRow}>
@@ -331,6 +331,15 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     width: 280,
+    backgroundColor: 'rgb(37, 28, 78)',
+    borderWidth: 1.5,
+    borderColor: 'rgb(255, 230, 0)',
+    padding: 24,
+    alignItems: 'center',
+  },
+
+  enemyModalCard: {
+    width: 480,
     backgroundColor: 'rgb(37, 28, 78)',
     borderWidth: 1.5,
     borderColor: 'rgb(255, 230, 0)',
