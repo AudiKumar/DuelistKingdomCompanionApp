@@ -19,6 +19,7 @@ const USER_KAIBUX_BALANCE = '@dk_kaibux';
 const USER_STAR_BALANCE = "@dk_star_wallet";
 
 type BalanceAction = 'add' | 'subtract' | null;
+type BalanceType = "KAIBUX" | "STARS"; 
 
 export default function UpdateBalanceScreen() {
   const navigation = useNavigation();
@@ -28,6 +29,7 @@ export default function UpdateBalanceScreen() {
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
 
   const [balanceModalVisible, setBalanceModalVisible] = useState(false);
+  const [starBalanceModalVisible, setStartBalanceModalVisible] = useState(false); 
   const [balanceAction, setBalanceAction] = useState<BalanceAction>(null);
   const [balanceInput, setBalanceInput] = useState('');
 
@@ -61,7 +63,6 @@ export default function UpdateBalanceScreen() {
       Alert.alert(message);
     }
   }
-
 
 
   function openBalanceModal(action: BalanceAction) {
