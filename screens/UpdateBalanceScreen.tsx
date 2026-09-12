@@ -99,12 +99,12 @@ export default function UpdateBalanceScreen() {
       return;
     }
 
-    if (balanceAction === 'subtract' && amount > kaibuxBalance) {
+    if (type === 'KAIBUX' && balanceAction === 'subtract' && amount > kaibuxBalance) {
       showAlert("You don't have enough for that.");
       return;
     }
 
-    if (balanceAction === 'subtract' && amount > starWalletBalance) {
+    if (type === 'STARS' && balanceAction === 'subtract' && amount > starWalletBalance) {
       showAlert("You don't have enough for that.");
       return;
     }
