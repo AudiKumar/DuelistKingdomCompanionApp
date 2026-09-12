@@ -186,11 +186,11 @@ export default function StartScreen() {
 
   const handleResetStorage = useCallback(async () => {
     try {
-      await AsyncStorage.multiRemove([USER_NAME_KEY, USER_STAR_BALANCE, USER_KAIBUCKS_BALANCE]);
+      await AsyncStorage.removeItem(USER_NAME_KEY);
       setNameInput("");
       setShowNameModal(true);
     } catch (error) {
-      console.error("Failed to clear user storage", error);
+      console.error("Failed to clear clear name", error);
     }
   }, []);
 
@@ -232,11 +232,11 @@ export default function StartScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.resetBtn}
+            style={styles.renameBtn}
             activeOpacity={0.8}
             onPress={handleResetStorage}
           >
-            <Text style={styles.resetBtnText}>RESET DATA</Text>
+            <Text style={styles.renameBtnText}>CHANGE NAME</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -344,18 +344,17 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
     fontFamily: "altFont",
   },
-  resetBtn: {
+  renameBtn: {
     marginTop: 20,
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderWidth: 1,
-    borderColor: "#ff4d4d",
-    backgroundColor: "rgba(255, 77, 77, 0.1)",
+    borderColor: "#ffffff",
     alignItems: "center",
     justifyContent: "center",
   },
-  resetBtnText: {
-    color: "#ff4d4d",
+  renameBtnText: {
+    color: "#ffffff",
     fontSize: 12,
     letterSpacing: 2,
     fontFamily: "altFont",
