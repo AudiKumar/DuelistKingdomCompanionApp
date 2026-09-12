@@ -62,6 +62,8 @@ export default function UpdateBalanceScreen() {
     }
   }
 
+
+
   function openBalanceModal(action: BalanceAction) {
     setBalanceAction(action);
     setBalanceInput('');
@@ -111,12 +113,39 @@ export default function UpdateBalanceScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.centerContent}>
-        <Text style={styles.lpLabel}>kaibux BALANCE</Text>
-        <Text style={styles.lpValue}>
-          {isLoadingBalance ? '—' : kaibuxBalance}
-        </Text>
-
+       <View style={styles.centerContent}>
+        {/* Kaibux Balance */}
         <View style={styles.lpButtonRow}>
+          <Text style={styles.lpLabel}>KAIBUX BALANCE</Text>
+          <Text style={styles.lpValue}>
+            {isLoadingBalance ? '—' : kaibuxBalance}
+          </Text>
+
+          <TouchableOpacity
+            style={styles.lpBtn}
+            activeOpacity={0.8}
+            onPress={() => openBalanceModal('subtract')}
+          >
+            <Text style={styles.lpBtnText}>−</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.lpBtn}
+            activeOpacity={0.8}
+            onPress={() => openBalanceModal('add')}
+          >
+            <Text style={styles.lpBtnText}>+</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {/* Stars Balance */}
+        <View style={styles.lpButtonRow}>
+
+          <Text style={styles.lpLabel}>STARS BALANCE</Text>
+          <Text style={styles.lpValue}>
+            {isLoadingBalance ? '—' : starWalletBalance}
+          </Text>
+
           <TouchableOpacity
             style={styles.lpBtn}
             activeOpacity={0.8}
@@ -134,6 +163,8 @@ export default function UpdateBalanceScreen() {
           </TouchableOpacity>
         </View>
 
+
+        {/* DONE BUTTON */}
         <TouchableOpacity
           style={styles.doneBtn}
           activeOpacity={0.8}
@@ -141,6 +172,7 @@ export default function UpdateBalanceScreen() {
         >
           <Text style={styles.wagerBtnText}>DONE</Text>
         </TouchableOpacity>
+      </View>
       </View>
 
       {/* Balance Adjustment Modal */}
@@ -214,6 +246,8 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
     fontFamily: 'mainFont',
     marginBottom: 4,
+    alignItems: 'center',
+    alignSelf: 'center'
   },
   lpValue: {
     color: '#ffffff',
