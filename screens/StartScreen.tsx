@@ -152,7 +152,7 @@ export default function StartScreen() {
           setShowNameModal(true);
           try {
             await AsyncStorage.multiSet([
-              [USER_STAR_BALANCE, "10"],
+              [USER_STAR_BALANCE, "3"],
               [USER_KAIBUX_BALANCE, "500"],
             ]);
           } catch (walletError) {
