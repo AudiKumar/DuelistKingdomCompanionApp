@@ -82,10 +82,7 @@ export default function DuelScreen() {
   const [diceModalVisible, setDiceModalVisible] = useState(false);
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
 
-  function handleEndDuel() {
-    showAlert('You lost the duel!');
-    (navigation.navigate as any)('Welcome');
-  }
+
 
   function showAlert(message: string) {
     if (Platform.OS === 'web') {
@@ -197,8 +194,24 @@ export default function DuelScreen() {
     closeLifePointsModal();
   }
 
-  function handleForfeit() {
+  async function handleForfeit() {
     setSettingsModalVisible(false);
+    const opStarsWagered = opWagerType === "STARS" ? (userWagerType === "STARS" ? userStarsWaged : 1) : 0;
+    const starsLost = userStarsWaged + opStarsWagered;
+    const kaibuxLost = (userWagerType === "KAIBUX" ? 1200 : 0) + (opWagerType === "KAIBUX" ? 1200 : 0);
+    const currStars = starWalletBalance;
+    const kaibux = kaibuxBalance;
+    const newStarBalance = currStars - starsLost;
+    const newkaibuxBalance = kaibux - kaibuxLost;
+
+    setStarWalletBalance(newStarBalance); 
+    setKaibuxBalance(newkaibuxBalance);
+    await AsyncStorage.setItem(USER_STAR_BALANCE, String(newStarBalance))
+    await AsyncStorage.setItem(USER_KAIBUX_BALANCE, String(newkaibuxBalance))
+
+    console.log("Stars Lost Due to Forfeit: ", starsLost, "\ncurrStars: " + currStars + "\nNew Balance: " + newStarBalance );
+    console.log("kaibux Won Due to Forfeit: ", kaibuxLost, "\ncurrkaibux: " + kaibux + "\nNew Balance: " + newkaibuxBalance );
+
     showAlert('You forfeited the duel.');
     (navigation.navigate as any)('Welcome');
   }
@@ -221,6 +234,26 @@ export default function DuelScreen() {
     await AsyncStorage.setItem(USER_KAIBUX_BALANCE, String(newkaibuxBalance))
 
     showAlert("You won"); 
+    (navigation.navigate as any)('Welcome');
+  }
+  
+  async function handleEndDuel() {
+    const opStarsWagered = opWagerType === "STARS" ? (userWagerType === "STARS" ? userStarsWaged : 1) : 0;
+    const starsLost = userStarsWaged + opStarsWagered;
+    const kaibuxLost = (userWagerType === "KAIBUX" ? 1200 : 0) + (opWagerType === "KAIBUX" ? 1200 : 0);
+    const currStars = starWalletBalance;
+    const kaibux = kaibuxBalance;
+    const newStarBalance = currStars - starsLost;
+    const newkaibuxBalance = kaibux - kaibuxLost;
+
+    setStarWalletBalance(newStarBalance); 
+    setKaibuxBalance(newkaibuxBalance);
+    await AsyncStorage.setItem(USER_STAR_BALANCE, String(newStarBalance))
+    await AsyncStorage.setItem(USER_KAIBUX_BALANCE, String(newkaibuxBalance))
+
+    console.log("Stars lost: ", starsLost, "\ncurrStars: " + currStars + "\nNew Balance: " + newStarBalance );
+    console.log("kaibux lost: ", kaibuxLost, "\ncurrkaibux: " + kaibux + "\nNew Balance: " + newkaibuxBalance );
+    showAlert('You lost the duel!');
     (navigation.navigate as any)('Welcome');
   }
 
